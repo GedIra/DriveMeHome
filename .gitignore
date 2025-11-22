@@ -1,0 +1,46 @@
+# ----------------------
+# ENV & SECRETS
+# ----------------------
+.env
+*.env
+.env.*
+
+# ----------------------
+# PYTHON / DJANGO
+# ----------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+
+# ----------------------
+# VIRTUAL ENVIRONMENTS
+# ----------------------
+venv/
+env/
+.venv/
+
+# Pipenv
+Pipfile.lock
+
+# ----------------------
+# NODE / TAILWIND
+# ----------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output (Tailwind output)
+static/css/output.css
+
+# ----------------------
+# EDITORS & OS
+# ----------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
