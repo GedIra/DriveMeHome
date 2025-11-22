@@ -6,7 +6,13 @@ from django.contrib.auth.views import (
     PasswordResetConfirmView, 
     PasswordResetCompleteView
 )
-from .views import UserLoginView, RegisterView
+from .views import (
+    UserLoginView,
+    RegisterView,
+    check_username_existence,
+    check_email_existence,
+    check_phone_existence,
+)
 from .forms import CustomPasswordResetForm, CustomSetPasswordForm
 
 urlpatterns = [
@@ -14,6 +20,9 @@ urlpatterns = [
     path('login/', UserLoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     path('register/', RegisterView.as_view(), name='register'),
+    path('ajax/check-username/', check_username_existence, name='check_username_existence'),
+    path('ajax/check-email/', check_email_existence, name='check_email_existence'),
+    path('ajax/check-phone/', check_phone_existence, name='check_phone_existence'),
 
     # Password Reset Flows
     path('password-reset/', 

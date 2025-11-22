@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta description="DriveMe Home - Emergency Driver Platform">
+  <meta name="keywords" content="DriveMe, Emergency, Driver, Platform, Home">
   <title>{% block title %}DriveMe Home{% endblock %}</title>
   <!-- Link to the Tailwind v4 output file -->
   <link rel="stylesheet" href="{% static 'dist/output.css' %}">
@@ -43,6 +45,8 @@
     {% block footer %}
     {% endblock %}
   </div>
-
+  {% block scripts %}
+    <script src="{% static 'js/authentication.js' %}"></script>
+  {% endblock %}
 </body>
 </html>
