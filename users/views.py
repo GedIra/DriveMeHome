@@ -7,12 +7,13 @@ from django.contrib.auth import login
 from .forms import CustomLoginForm, CustomUserCreationForm
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
 
 
 User = get_user_model()
 
 def landing_view(request):
-    return render(request, 'users/landing.html')
+    return render(request, 'users/landingPage.html')
 
 # --- EXISTING LOGIN VIEW ---
 class UserLoginView(LoginView):
@@ -74,3 +75,4 @@ class RegisterView(CreateView):
   def form_invalid(self, form):
     messages.error(self.request, "Registration failed. Please correct the errors below.")
     return super().form_invalid(form)
+  

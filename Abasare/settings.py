@@ -134,3 +134,17 @@ AUTHENTICATION_BACKENDS = [
 
 LOGIN_REDIRECT_URL = '/' 
 LOGIN_URL = 'login'
+
+# --- EMAIL CONFIGURATION (Development) ---
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# DEFAULT_FROM_EMAIL = 'DriveMe Home <support@drivemehome.rw>'
+
+# For production (e.g., Gmail)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = config("email_host")
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = config('email_host_user')
+EMAIL_HOST_PASSWORD = config('email_host_password')
+DEFAULT_FROM_EMAIL = config("default_from_email")

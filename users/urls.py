@@ -12,11 +12,13 @@ from .views import (
     check_username_existence,
     check_email_existence,
     check_phone_existence,
+    landing_view
 )
 from .forms import CustomPasswordResetForm, CustomSetPasswordForm
 
 urlpatterns = [
     # Authentication
+    path('', landing_view, name='landing'),
     path('login/', UserLoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     path('register/', RegisterView.as_view(), name='register'),
@@ -28,7 +30,9 @@ urlpatterns = [
     path('password-reset/', 
          PasswordResetView.as_view(
              template_name='users/authentication/password_reset.html',
-             form_class=CustomPasswordResetForm
+             form_class=CustomPasswordResetForm,
+             # Add this line to use the new HTML email
+             html_email_template_name='users/authentication/password_reset_email.html'
          ), 
          name='password_reset'),
          

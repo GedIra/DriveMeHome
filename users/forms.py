@@ -7,8 +7,21 @@ from django.contrib.auth.forms import (
 )
 from django.contrib.auth import get_user_model
 import re
+from django.core.mail import EmailMultiAlternatives
+import threading
+from django.template import loader
+from django.template.loader import render_to_string
 
 User = get_user_model()
+
+# --- CREATE THE THREAD CLASS ---
+class EmailThread(threading.Thread):
+    def __init__(self, email_message):
+        self.email_message = email_message
+        threading.Thread.__init__(self)
+
+    def run(self):
+        self.email_message.send()
 
 # --- EXISTING LOGIN FORM ---
 class CustomLoginForm(AuthenticationForm):
@@ -90,6 +103,31 @@ class CustomPasswordResetForm(PasswordResetForm):
             'placeholder': 'Enter your registered email'
         })
     )
+
+    def send_mail(self, subject_template_name, email_template_name,
+                  context, from_email, to_email, html_email_template_name=None):
+        """
+        Override the standard send_mail method to use threads.
+        """
+        # Render the subject and message content
+        from django.template import loader
+        
+        subject = loader.render_to_string(subject_template_name, context)
+        # Email subject *must not* contain newlines
+        subject = ''.join(subject.splitlines())
+        
+        body = loader.render_to_string(email_template_name, context)
+        
+        # Change: Use EmailMultiAlternatives instead of EmailMessage
+        email_message = EmailMultiAlternatives(subject, body, from_email, [to_email])
+        
+        if html_email_template_name:
+            html_email = loader.render_to_string(html_email_template_name, context)
+            email_message.attach_alternative(html_email, 'text/html')
+
+        # Send using the thread
+        EmailThread(email_message).start()
+
 
 class CustomSetPasswordForm(SetPasswordForm):
     def __init__(self, *args, **kwargs):
