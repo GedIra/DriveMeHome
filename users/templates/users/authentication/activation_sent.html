@@ -1,0 +1,25 @@
+{% extends "users/authentication/base.html" %}
+
+{% block header_title %}Check Your Email{% endblock %}
+{% block header_subtitle %}One last step!{% endblock %}
+
+{% block content %}
+  <div class="text-center space-y-4">
+    <div class="text-blue-500 text-5xl mb-4">📩</div>
+    <h3 class="text-xl font-semibold text-gray-800">Confirm your email address</h3>
+    <p class="text-gray-600">
+      We have sent a confirmation email to your inbox. Please click the link in that email to activate your account.
+    </p>
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 text-left rounded mt-6">
+      <p class="text-sm text-yellow-700">
+        <strong>Note:</strong> You cannot log in until you verify your email address.
+      </p>
+    </div>
+  </div>
+{% endblock %}
+
+{% block footer %}
+  <div class="bg-gray-50 px-8 py-4 border-t border-gray-100 text-center text-sm text-gray-600">
+    <a href="{% url 'login' %}" class="text-blue-600 hover:underline">Back to Login</a>
+  </div>
+{% endblock %}
