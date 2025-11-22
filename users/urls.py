@@ -9,10 +9,12 @@ from django.contrib.auth.views import (
 from .views import (
     UserLoginView,
     RegisterView,
-    check_username_existence,
+    ActivateAccountView,
+    check_username_existence, 
     check_email_existence,
     check_phone_existence,
-    landing_view
+    landing_view,
+    activation_sent_view,
 )
 from .forms import CustomPasswordResetForm, CustomSetPasswordForm
 
@@ -26,13 +28,17 @@ urlpatterns = [
     path('ajax/check-email/', check_email_existence, name='check_email_existence'),
     path('ajax/check-phone/', check_phone_existence, name='check_phone_existence'),
 
+    # Activation Flows
+    path('activation-sent/', activation_sent_view, name='activation_sent'),
+    path('activate/<uidb64>/<token>/', ActivateAccountView.as_view(), name='activate'),
+
     # Password Reset Flows
     path('password-reset/', 
          PasswordResetView.as_view(
              template_name='users/authentication/password_reset.html',
              form_class=CustomPasswordResetForm,
              # Add this line to use the new HTML email
-             html_email_template_name='users/authentication/password_reset_email.html'
+             html_email_template_name='users/authentication/emails/password_reset_email.html'
          ), 
          name='password_reset'),
          
