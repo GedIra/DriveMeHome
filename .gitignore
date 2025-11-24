@@ -23,7 +23,7 @@ env/
 .venv/
 
 # Pipenv
-Pipfile.lock
+#Pipfile.lock
 
 # ----------------------
 # NODE / TAILWIND
