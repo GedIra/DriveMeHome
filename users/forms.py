@@ -11,6 +11,7 @@ from django.core.mail import EmailMultiAlternatives
 import threading
 from django.template import loader
 from django.template.loader import render_to_string
+import threading
 
 User = get_user_model()
 

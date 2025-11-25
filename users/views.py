@@ -13,6 +13,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.core.mail import EmailMultiAlternatives
 from .forms import CustomLoginForm, CustomUserCreationForm, EmailThread
 from .tokens import account_activation_token
+from django.conf import settings
 
 User = get_user_model()
 
@@ -89,7 +90,12 @@ class RegisterView(CreateView):
       
     # 5. Send Email (using the Thread class we defined in forms.py)
     to_email = form.cleaned_data.get('email')
-    email = EmailMultiAlternatives(mail_subject, message, to=[to_email])
+    email = EmailMultiAlternatives(
+      mail_subject,
+      message,
+      settings.DEFAULT_FROM_EMAIL,   # explicitly set from_email
+      [to_email]
+    )
     email.attach_alternative(message, "text/html")
     EmailThread(email).start()
 
