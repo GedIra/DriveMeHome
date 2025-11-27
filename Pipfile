@@ -8,6 +8,7 @@ django = "*"
 python-decouple = "*"
 django-gunicorn = "*"
 whitenoise = "*"
+lucide = {extras = ["django"], version = "*"}
 
 [dev-packages]
 

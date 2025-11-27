@@ -1,4 +1,6 @@
 {% load static %}
+{% load lucide %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,6 +15,9 @@
     <!-- Additional head content -->
     {% endblock %}
 </head>
+<!-- Icons -->
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 <body>
     <header>
         <nav>
@@ -40,19 +45,71 @@
         </nav>
     </header>
 
+
+
     <main>
         {% block content %}
-            <ul class="block lg:flex space-x-4 m-auto bg-red-50 border-2 border-black py-10 px-10">
-                <li>Mango</li>
-                <li>Orange</li>
-                <li>Apple</li>
-                <li>Avocado</li>
-            </ul>
+            
         {% endblock %}
     </main>
 
     <footer>
-        <p>&copy; {{ year }} My Django Site</p>
+        {% block footer %}
+
+            <div class="p-16 bg-slate-900 text-gray-300/80 grid space-y-6">
+                <div class="grid space-y-4  lg:grid-cols-4 text-lg font-normal">
+                    <div class="grid">
+                        <div>
+                            <img src="" alt="" class="">
+                            <p class="font-bold text-white text-xl">DriveMe Home</p>
+                        </div>
+                        <p class="text-lg font-normal">Safe, reliable designated driver service across Rwanda. Your safety is our mission.</p>
+                        <div class="flex space-x-4">
+                            <a href="#">{% lucide "facebook" size="24" stroke_width=2 fill="#9ca3af" class="text-gret" %}</a>
+                            <a href="#">{% lucide "twitter" size="24" stroke_width=2 fill="#9ca3af" class="text-gret" %}</a>
+                            <a href="#">{% lucide "instagram" size="24" stroke_width=1 fill="transparent" class="text-gret" %}</a>
+                            <a href="#">{% lucide "linkedin" size="24" stroke_width=1 fill="#9ca3af" class="text-gret" %}</a>
+                        </div>
+                    </div>
+
+                    <div class="grid space-y-1.5">
+                        <p class="font-semibold text-white text-lg">Company</p>
+                        <a href="#">About Us</a>
+                        <a href="#">How It Works</a>
+                        <a href="#">Safety</a>
+                        <a href="#">Careers</a>
+                        <a href="#">Press</a>
+                    </div>
+
+                    <div class="grid space-y-1.5">
+                        <p class="font-semibold text-white text-lg">Support</p>
+                        <a href="#">Help Center</a>
+                        <a href="#">Contact Us</a>
+                        <a href="#">Report Issue</a>
+                        <a href="#">Emergency</a>
+                        <a href="#">Lost Items</a>
+                    </div>
+
+                    <div class="grid space-y-1.5">
+                        <p class="font-semibold text-white text-lg">Legal</p>
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms of Service</a>
+                        <a href="#">Driver Agreement</a>
+                        <a href="#">Admin Login</a>
+                    </div>
+                </div>
+                <div class="w-full pt-8 border-t border-gray-400/20">
+                    <div class="flex flex-col-reverse space-y-2 lg:flex lg:flex-row w-full justify-between">
+                        <span>© 2024 DriveMe Home. All rights reserved.</span>
+                        <p class="grid lg:flex space-x-4">
+                            <span>Available in:</span>
+                            <span>Kigali • Butare • Musanze</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        {% endblock %}
     </footer>
 
     <!-- JavaScript files -->

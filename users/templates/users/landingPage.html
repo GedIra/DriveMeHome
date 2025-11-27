@@ -1,1 +1,38 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Django site landing page{% endblock %}
+
+{% block content %}
+  <div class="grid border-2">
+    <section name="intro" class="w-full h-fit grid relative border-4 border-red-500">
+      <img src="{% static 'images/public/taxi.jpeg' %}" alt="taxi" 
+      class="absolute size-full object-cover object-center">
+      <div class="grid px-8">
+        <div class="flex flex-col">
+          <span>Don't Drive Impaired.</span>
+          <span>We Drive You Home</span>
+          <span>in Your Own Car</span>
+        </div>
+        <p class="">
+          Professional drivers arrive at your location and safely drive you home in your own vehicle. Available 24/7 across Rwanda.
+        </p>
+        <div class="flex">
+          <a href="#" class="flex space-x-1">
+            <ion-icon name="person-add-outline" style="color: brown;"></ion-icon>
+            <span>Download App</span>
+          </a>
+          <a href="#" class="flex space-x-1">
+            <img src="{% static 'images/svg/person-add-outline.svg' %}" class="text-red-500" alt="register icon">
+            <span>Register</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+
+
+
+{% endblock %}
