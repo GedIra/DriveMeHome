@@ -1,38 +1,46 @@
 {% extends "base.html" %}
 {% load static %}
+{% block extra_head %}{% endblock %}
 
 {% block title %}My Django site landing page{% endblock %}
 
+
 {% block content %}
-  <div class="grid border-2">
-    <section name="intro" class="w-full h-fit grid relative border-4 border-red-500">
-      <img src="{% static 'images/public/taxi.jpeg' %}" alt="taxi" 
-      class="absolute size-full object-cover object-center">
-      <div class="grid px-8">
-        <div class="flex flex-col">
-          <span>Don't Drive Impaired.</span>
-          <span>We Drive You Home</span>
-          <span>in Your Own Car</span>
-        </div>
-        <p class="">
-          Professional drivers arrive at your location and safely drive you home in your own vehicle. Available 24/7 across Rwanda.
-        </p>
-        <div class="flex">
-          <a href="#" class="flex space-x-1">
-            <ion-icon name="person-add-outline" style="color: brown;"></ion-icon>
-            <span>Download App</span>
-          </a>
-          <a href="#" class="flex space-x-1">
-            <img src="{% static 'images/svg/person-add-outline.svg' %}" class="text-red-500" alt="register icon">
-            <span>Register</span>
-          </a>
+  <main>
+    <div class="bg-cover bg-center" style="background-image: url('{% static 'images/public/taxi.jpeg' %}');"> 
+      <div class="px-110 pt-30 pb-50 text-white bg-primary/50">
+        <div class="flex flex-col space-y-6">
+          <div class="text-center font-bold text-6xl space-y-1">
+            <h1 class="">Don't Drive Impaired.</h1>
+            <p class="text-secondary">We Drive You Home</p>
+            <p class="">in Your Own Car</p>
+          </div>
+          <p class="text-center font-normal text-2xl">
+            Professional drivers arrive at your location and safely drive you home in your own vehicle. Available 24/7 across Rwanda.
+          </p>
+
+          <div class="flex justify-center items-center w-full gap-x-5 font-semibold text-lg">
+            <a href="#" class="flex  items-center rounded-xl px-8 py-4 gap-2 bg-secondary">
+              <img src="{% static 'images/svg/wheel.svg' %}" alt="steering wheel" class="size-6">
+              <span class="text-primary">Book a Driver</span>
+            </a>
+            <a href="#" class="flex  items-center border-2 rounded-xl px-8 py-4 gap-2 group hover:bg-white">
+              <img src="{% static 'images/svg/person_add_white.svg' %}" alt="register icon" class="size-6 group-hover:hidden">
+              <img src="{% static 'images/svg/person_add_blue.svg' %}" alt="register icon" class="hidden size-6 group-hover:block">
+              <span class="group-hover:text-primary">Create account</span>
+            </a>
+          </div>
+          
         </div>
       </div>
-    </section>
+    </div>
 
-  </div>
+    <div class="px-20 pt-10">
+      <div class="space-y-4 text-center">
+        <h1 class="font-bold text-5xl text-primary">How DriveMe Home Works</h1>
+        <p class="text-[#4b5563] font-normal text-xl">Three simple steps to get home safely in your own vehicle</p>
+      </div>
 
-
-
-
+    </div>
+  </main>
 {% endblock %}
