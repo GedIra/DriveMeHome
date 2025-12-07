@@ -15,3 +15,16 @@
   --color-text-default: #4b5563;
   --text-custom-sm : 16px;
 }
+
+/* Initial state of the icon */
+.my-icon {
+  fill: #9ca3af;
+  stroke: #9ca3af;
+  transition: fill 0.3s ease, stroke 0.3s ease; /* Smooth transition */
+}
+
+.my-icon:hover {
+  fill: #ffc107;
+  stroke: #ffc107;
+  cursor: pointer; 
+}
