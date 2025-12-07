@@ -19,9 +19,9 @@
 <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 <body>
     <header>
-        <nav>
+        <nav class="fixed top-0 right-0 left-0 bg-white shadow-lg rounded-b-lg">
             {% block nav %}
-                <div class="flex w-full justify-center items-center p-4">
+                <div class="hidden lg:flex w-full justify-center items-center p-4">
                     <ul class="flex w-full justify-between items-center">
                         <a href="#" class="flex space-x-4 items-center">
                             <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-1 px-3">
@@ -39,7 +39,19 @@
                             <a href="#" class="font-medium text-primary">Log In</a>
                         </li>
                     </ul>
-                </div>   
+                </div>
+                
+                <div class="static flex w-full justify-center items-center h-20 px-4 lg:hidden">
+                    <ul class="flex w-full items-center justify-between">
+                        <a href="#" class="flex space-x-4 items-center">
+                            <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-2 px-3">
+                                <img src="{% static 'images/svg/dark_logo.png' %}" alt="Site Logo" class="w-8 h-7">
+                            </div>
+                            <span class="font-bold text-2xl text-primary">DriveMe Home</span>
+                        </a>
+                        <img src="{% static 'images/svg/menu.svg' %}" alt="menu button" class="w-10">
+                    </ul>
+                </div>  
             {% endblock %}
         </nav>
     </header>
