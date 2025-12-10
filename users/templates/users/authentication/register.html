@@ -20,6 +20,33 @@
             {{ field }}
             <span class="ml-2 text-sm text-gray-600">Check this box if you want to drive for us.</span>
           </div>
+        {% elif field.name == 'username' %}
+          {{ field }}
+          <span id="username-spinner" class="ml-2 align-middle hidden" aria-hidden="true">
+            <svg class="w-4 h-4 text-gray-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+          </span>
+          <p id="username-feedback" class="text-xs mt-1 text-gray-500" aria-live="polite"></p>
+        {% elif field.name == 'email' %}
+          {{ field }}
+          <span id="email-spinner" class="ml-2 align-middle hidden" aria-hidden="true">
+            <svg class="w-4 h-4 text-gray-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+          </span>
+          <p id="email-feedback" class="text-xs mt-1 text-gray-500" aria-live="polite"></p>
+        {% elif field.name == 'phone_number' %}
+          {{ field }}
+          <span id="phone-spinner" class="ml-2 align-middle hidden" aria-hidden="true">
+            <svg class="w-4 h-4 text-gray-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+          </span>
+          <p id="phone-feedback" class="text-xs mt-1 text-gray-500" aria-live="polite"></p>
         {% else %}
           {{ field }}
         {% endif %}
