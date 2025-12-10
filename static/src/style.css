@@ -1,1 +1,30 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@source "../../**/templates/**/*.html"; 
+/* 1. Scan the root 'templates' directory (base.html, landingPage.html) */
+@source "../../templates/**/*.html";
+
+/* 2. Scan 'templates' inside any app (e.g., users/templates/...) */
+@source "../../**/templates/**/*.html";
+
+/* 3. Scan Python files containing Tailwind classes (e.g., users/forms.py) */
+@source "../../**/forms.py";
+@theme {
+  --color-primary: #1a237e;
+  --color-secondary: #ffc107;
+  --color-gret: #9ca3af;
+  --color-text-default: #4b5563;
+  --text-custom-sm : 16px;
+}
+
+/* Initial state of the icon */
+.my-icon {
+  fill: #9ca3af;
+  stroke: #9ca3af;
+  transition: fill 0.3s ease, stroke 0.3s ease; /* Smooth transition */
+}
+
+.my-icon:hover {
+  fill: #ffc107;
+  stroke: #ffc107;
+  cursor: pointer; 
+}

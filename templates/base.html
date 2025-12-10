@@ -1,4 +1,5 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,21 +14,116 @@
     <!-- Additional head content -->
     {% endblock %}
 </head>
+<!-- Icons -->
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 <body>
+    <header>
+        <nav class="fixed top-0 right-0 left-0 bg-white shadow-lg rounded-b-lg">
+            {% block nav %}
+                <div class="hidden lg:flex w-full justify-center items-center p-4">
+                    <ul class="flex w-full justify-between items-center">
+                        <a href="#" class="flex space-x-4 items-center">
+                            <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-1 px-3">
+                                <img src="{% static 'images/svg/dark_logo.png' %}" alt="Site Logo" class="w-9 h-8">
+                            </div>
+                            <span class="font-bold text-3xl text-primary">DriveMe Home</span>
+                        </a>
+
+                        <li class="space-x-6 text-lg font-normal text-neutral-600">
+                            <a href="#">How It Works</a>
+                            <a href="#">Safety</a>
+                            <a href="#">Pricing</a>
+                            <a href="#">Support</a>
+                            <a href="#" class="font-medium text-primary">Sign up</a>
+                            <a href="#" class="font-medium text-primary">Log In</a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="static flex w-full justify-center items-center h-20 px-4 lg:hidden">
+                    <ul class="flex w-full items-center justify-between">
+                        <a href="#" class="flex space-x-4 items-center">
+                            <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-2 px-3">
+                                <img src="{% static 'images/svg/dark_logo.png' %}" alt="Site Logo" class="w-8 h-7">
+                            </div>
+                            <span class="font-bold text-2xl text-primary">DriveMe Home</span>
+                        </a>
+                        <img src="{% static 'images/svg/menu.svg' %}" alt="menu button" class="w-10">
+                    </ul>
+                </div>  
+            {% endblock %}
+        </nav>
+    </header>
 
     <main>
         {% block content %}
-            <ul class="block lg:flex space-x-4 m-auto bg-red-50 border-2 border-black py-10 px-10">
-                <li>Mango</li>
-                <li>Orange</li>
-                <li>Apple</li>
-                <li>Avocado</li>
-            </ul>
-        {% endblock %}
+        <!-- Main content goes here -->
+        {% endblock %} 
     </main>
 
     <footer>
-        <p>&copy; {{ year }} My Django Site</p>
+        {% block footer %}
+
+            <div class="p-[5%] max-p-16 bg-slate-900 text-gray-300/80 grid space-y-6">
+                <div class="grid gap-y-4 lg:grid-cols-3 text-lg font-normal">
+                    <div class="grid order-last lg:order-first w-full sm:max-w-[70%]">
+                        <div class="flex gap-2 items-center">
+                            <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-1 px-2 sm:px-3">
+                                <img src="{% static 'images/svg/dark_logo.png' %}" alt="Site Logo" class="size-6 sm:size-7 lg:size-8">
+                            </div>
+                            <p class="font-bold text-white text-xl sm:text-2xl lg:text-3xl">DriveMe Home</p>
+                        </div>
+                        <p class="text-lg font-normal">Safe, reliable designated driver service across Rwanda. Your safety is our mission.</p>
+                        <div class="flex space-x-4 icon-wrapper">
+                            <a href="#">{% lucide "facebook" size="24" stroke_width=2 class="my-icon" %}</a>
+                            <a href="#">{% lucide "twitter" size="24" stroke_width=2 class="my-icon" %}</a>
+                            <a href="#">{% lucide "instagram" size="24" stroke_width=1 fill="transparent" class="text-gret  hover:text-secondary" %}</a>
+                            <a href="#">{% lucide "linkedin" size="24" stroke_width=1  class="my-icon" %}</a>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-y-4 sm:grid-cols-3 lg:col-span-2 lg:grid-cols-3">
+                        <div class="grid space-y-1.5">
+                            <p class="font-semibold text-white text-lg">Company</p>
+                            <a href="#">About Us</a>
+                            <a href="#">How It Works</a>
+                            <a href="#">Safety</a>
+                            <a href="#">Careers</a>
+                            <a href="#">Press</a>
+                        </div>
+
+                        <div class="grid space-y-1.5">
+                            <p class="font-semibold text-white text-lg">Support</p>
+                            <a href="#">Help Center</a>
+                            <a href="#">Contact Us</a>
+                            <a href="#">Report Issue</a>
+                            <a href="#">Emergency</a>
+                            <a href="#">Lost Items</a>
+                        </div>
+
+                        <div class="grid content-start space-y-1.5">
+                            <p class="font-semibold text-white text-lg">Legal</p>
+                            <a href="#">Privacy Policy</a>
+                            <a href="#">Terms of Service</a>
+                            <a href="#">Driver Agreement</a>
+                            <a href="#">Admin Login</a>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="w-full pt-8 border-t border-gray-400/20">
+                    <div class="flex flex-col-reverse space-y-2 lg:flex lg:flex-row w-full justify-between">
+                        <span>© 2024 DriveMe Home. All rights reserved.</span>
+                        <p class="grid lg:flex space-x-4">
+                            <span>Available in:</span>
+                            <span>Kigali • Butare • Musanze</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        {% endblock %}
     </footer>
 
     <!-- JavaScript files -->
