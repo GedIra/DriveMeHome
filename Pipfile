@@ -9,6 +9,7 @@ python-decouple = "*"
 django-gunicorn = "*"
 whitenoise = "*"
 lucide = {extras = ["django"], version = "*"}
+pillow = "*"
 
 [dev-packages]
 
