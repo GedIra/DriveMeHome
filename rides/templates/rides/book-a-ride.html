@@ -1,0 +1,77 @@
+{% extends 'base.html'%}
+{% load static %}
+
+{% block nav %}
+{% endblock nav %}
+
+{% block footer %}
+{% endblock footer %}
+
+{% block content %}
+
+<main class="mt-0">
+  <div class="grid grid-cols-12 h-screen">
+    <div class="grid col-start-2 col-span-4 space-y-4 border border-amber-300 h-fit">
+      <div class="inline-flex gap-3 items-center border ">
+        {% lucide 'map-pin' stroke_width=2 class='my-icon-stroke' %}
+        <span>Kigali,</span>
+        <span>Kgl</span>
+        <a href="#" class="underline">Change Location</a>
+      </div>
+      <h1 class="text-5xl font-bold">Go anywhere with <span class="text-primary">DriveMe Home</span></h1>
+      <div class="pickup-btn inline-flex gap-3 items-center w-fit p-3 rounded-3xl bg-gret/50">
+        {%  lucide 'clock' stroke_width=2 fill='#ffb900' size=24 %}
+        <span class="font-medium">PickUp Now</span>
+        {%  lucide 'chevron-down' stroke_width=3 size=16 %}
+      </div>
+      <form class="">
+        <label class="">Pickup Location</label>
+        <div class="flex items-center w-fit my-1">
+          <div class="size-full p-2 border rounded-l-sm border-r-0">
+            <img src="{% static 'images/svg/my_location.svg' %}" alt="Location Icon">
+          </div>
+          <input type="search" name="" id="" placeholder="Pickup location" class="text-custom-sm border rounded-r-2xl focus:ring-primary focus:border-primary">
+        </div>
+
+        <label class="mt-1">Dropoff Location</label>
+        <div class="flex items-center w-fit my-2">
+          <div class="size-full p-2 border rounded-l-sm border-r-0">
+            <img src="{% static 'images/svg/my_location.svg' %}" alt="Location Icon">
+          </div>
+          <input type="search" name="" id="" placeholder="Dropoff Location" class="text-custom-sm border rounded-r-2xl focus:ring-primary focus:border-primary">
+        </div>
+        
+      </form>
+
+      <div class="pickup-btn inline-flex gap-3 items-center w-fit px-3 py-2 rounded-3xl bg-gret/50">
+        {%  lucide 'user' stroke_width=2 fill='#00000' size=16 %}
+        <span class="font-medium text-sm">For Me</span>
+        {%  lucide 'chevron-down' stroke_width=3 size=16 %}
+      </div>
+      <div class="grid lg:grid-cols-2 gap-2">
+        <div class="flex items-center ps-4 border border-gret  rounded-base">
+          <input id="Manual" type="radio" value="" name="transmission" class="w-4 h-4 text-gret bg-neutral-secondary-medium rounded-full checked:border-primary focus:ring-2 focus:outline-none focus:ring-brand-subtle border border-gret appearance-none">
+          <label for="automatic" class="w-full py-4 select-none ms-2 text-sm font-medium text-heading">Manual</label>
+        </div>
+        <div class="flex items-center ps-4 border border-gret  rounded-base">
+          <input checked id="automatic" type="radio" value="" name="transmission" class="w-4 h-4 text-gret bg-neutral-secondary-medium rounded-full checked:border-primary focus:ring-2 focus:outline-none focus:ring-brand-subtle border border-gret appearance-none">
+          <label for="automatic" class="w-full py-4 select-none ms-2 text-sm font-medium text-heading">Automatic</label>
+        </div>
+      </div>
+      
+      <button class="w-full bg-primary text-center p-3 rounded-xl text-lg text-secondary font-semibold hover:bg-primary/90">Search</button>
+      <div>
+
+      </div>
+
+    </div>
+    <div class="grid col-start-7 col-span-5 border border-red-400"> </div>
+
+  </div>
+
+</main>
+
+
+{% endblock content %}
+
+

@@ -162,3 +162,9 @@ EMAIL_USE_SSL = False
 EMAIL_HOST_USER = config('email_host_user')
 EMAIL_HOST_PASSWORD = config('email_host_password')
 DEFAULT_FROM_EMAIL = config("default_from_email")
+
+#Google Maps API Key
+GOOGLE_MAPS_API_KEY = config("google_maps_api_key")
+
+# Mapbox Access Token (for rides/utils.py)
+MAPBOX_ACCESS_TOKEN = config("mapbox_access_token", default="")

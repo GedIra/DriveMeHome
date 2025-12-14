@@ -10,6 +10,8 @@ django-gunicorn = "*"
 whitenoise = "*"
 lucide = {extras = ["django"], version = "*"}
 pillow = "*"
+googlemaps = "*"
+requests = "*"
 
 [dev-packages]
 
