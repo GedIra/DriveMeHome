@@ -19,9 +19,9 @@
 <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 <body>
     <header>
-        <nav class="fixed top-0 right-0 left-0 bg-white shadow-lg rounded-b-lg">
+        <nav class="fixed z-10 top-0 right-0 left-0 bg-white shadow-lg rounded-b-lg">
             {% block nav %}
-                <div class="hidden lg:flex w-full justify-center items-center p-4">
+                <div class="hidden lg:flex w-full justify-center items-center h-20 p-4">
                     <ul class="flex w-full justify-between items-center">
                         <a href="#" class="flex space-x-4 items-center">
                             <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-1 px-3">
@@ -126,7 +126,10 @@
         {% endblock %}
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
+    
     <!-- JavaScript files -->
+    {% block scripts %}
     <!-- <script src="{% static 'js/main.js' %}"></script> -->
+    {% endblock %}
 </body>
 </html>

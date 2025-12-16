@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.views import LoginView
 from django.views.generic import CreateView, View
 from django.urls import reverse_lazy
@@ -11,9 +11,19 @@ from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import EmailMultiAlternatives
-from .forms import CustomLoginForm, CustomUserCreationForm, EmailThread
 from .tokens import account_activation_token
 from django.conf import settings
+from .forms import (
+    CustomLoginForm, 
+    CustomUserCreationForm, 
+    EmailThread, 
+    DriverProfileForm, 
+    CustomerProfileForm,
+    DriverApplicationForm
+)
+from .tokens import account_activation_token
+from .models import DriverProfile, CustomerProfile
+from django.contrib.auth.decorators import login_required
 
 User = get_user_model()
 
@@ -129,4 +139,84 @@ class ActivateAccountView(View):
 # --- EMAIL SENT PAGE  VIEW---
 def activation_sent_view(request):
   return render(request, 'users/authentication/activation_sent.html')
-  
+
+@login_required
+def profile_view(request):
+    """
+    Unified profile view that determines if the user is a Driver or Customer
+    and renders the appropriate form to update their profile.
+    """
+    user = request.user
+    
+    # Initialize vars
+    form = None
+    template_name = 'users/profile_form.html'
+    profile_type = 'User'
+
+    if user.is_driver:
+        profile_type = 'Driver'
+        # Get or create ensures we don't crash if signal failed (safety net)
+        profile, created = DriverProfile.objects.get_or_create(user=user)
+        
+        if request.method == 'POST':
+            form = DriverProfileForm(request.POST, request.FILES, instance=profile)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Driver profile updated successfully!')
+                return redirect('profile')
+        else:
+            form = DriverProfileForm(instance=profile)
+
+    elif user.is_customer:
+        profile_type = 'Customer'
+        profile, created = CustomerProfile.objects.get_or_create(user=user)
+        
+        if request.method == 'POST':
+            form = CustomerProfileForm(request.POST, request.FILES, instance=profile)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Profile updated successfully!')
+                return redirect('profile')
+        else:
+            form = CustomerProfileForm(instance=profile)
+    
+    else:
+        # Fallback for admins or weird states
+        messages.info(request, "You are viewing a generic account.")
+
+    context = {
+        'form': form,
+        'profile_type': profile_type,
+        'page_title': f'Edit {profile_type} Profile'
+    }
+    return render(request, template_name, context)
+
+# --- DRIVER APPLICATION VIEW ---
+@login_required
+def driver_application_view(request):
+    user = request.user
+    
+    if not user.is_driver:
+        messages.error(request, "Only drivers can access the verification application.")
+        return redirect('profile')
+
+    profile, created = DriverProfile.objects.get_or_create(user=user)
+
+    if request.method == 'POST':
+        form = DriverApplicationForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Application submitted successfully! Your documents are under review.')
+            return redirect('profile') # Or redirect to a 'status' page
+    else:
+        form = DriverApplicationForm(instance=profile)
+
+    context = {
+        'form': form,
+        'page_title': 'Driver Verification Application'
+    }
+    return render(request, 'users/driver_application.html', context)
+
+# ... (Existing simple views like activation_sent_view if present) ...
+def activation_sent_view(request):
+    return render(request, 'users/activation_sent.html')

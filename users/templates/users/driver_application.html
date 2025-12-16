@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Driver Application - DriveMe Home{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-24 mb-12 p-8 bg-white rounded-xl shadow-lg border border-gray-100">
+    
+    <!-- Header -->
+    <div class="border-b border-gray-200 pb-6 mb-8 text-center">
+        <h2 class="text-3xl font-bold text-gray-800">Driver Verification Application</h2>
+        <p class="text-gray-500 mt-2 text-lg">Upload your official documents to become a verified driver.</p>
+    </div>
+
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="p-4 text-sm rounded-lg {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-8">
+        {% csrf_token %}
+
+        <!-- Section 1: Contact Information -->
+        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                Contact Details
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-900">{{ form.email.label }}</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-900">{{ form.phone_number.label }}</label>
+                    {{ form.phone_number }}
+                    {% if form.phone_number.errors %}<p class="text-red-500 text-xs mt-1">{{ form.phone_number.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: License Details -->
+        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
+                License Information
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-900">{{ form.license_number.label }}</label>
+                    {{ form.license_number }}
+                </div>
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-900">{{ form.license_expiry_date.label }}</label>
+                    {{ form.license_expiry_date }}
+                </div>
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-900">{{ form.license_category.label }}</label>
+                    {{ form.license_category }}
+                </div>
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-900">{{ form.transmission_capability.label }}</label>
+                    {{ form.transmission_capability }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Document Uploads -->
+        <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+            <h3 class="text-xl font-semibold text-blue-800 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                Required Documents
+            </h3>
+            <div class="grid grid-cols-1 gap-6">
+                
+                <!-- Driving License -->
+                <div class="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
+                    <label class="block mb-2 text-sm font-bold text-gray-900">Driving License Copy <span class="text-red-500">*</span></label>
+                    <p class="text-xs text-gray-500 mb-3">{{ form.driving_license_file.help_text }}</p>
+                    {{ form.driving_license_file }}
+                    {% if form.driving_license_file.errors %}<p class="text-red-500 text-xs mt-1">{{ form.driving_license_file.errors.0 }}</p>{% endif %}
+                </div>
+
+                <!-- ID Card -->
+                <div class="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
+                    <label class="block mb-2 text-sm font-bold text-gray-900">National ID / Passport <span class="text-red-500">*</span></label>
+                    <p class="text-xs text-gray-500 mb-3">{{ form.national_id_file.help_text }}</p>
+                    {{ form.national_id_file }}
+                    {% if form.national_id_file.errors %}<p class="text-red-500 text-xs mt-1">{{ form.national_id_file.errors.0 }}</p>{% endif %}
+                </div>
+
+                <!-- Criminal Record -->
+                <div class="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
+                    <label class="block mb-2 text-sm font-bold text-gray-900">Certificate of Non-Conviction <span class="text-red-500">*</span></label>
+                    <p class="text-xs text-gray-500 mb-3">{{ form.criminal_record_file.help_text }}</p>
+                    {{ form.criminal_record_file }}
+                    {% if form.criminal_record_file.errors %}<p class="text-red-500 text-xs mt-1">{{ form.criminal_record_file.errors.0 }}</p>{% endif %}
+                </div>
+
+                <!-- Others -->
+                <div class="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
+                    <label class="block mb-2 text-sm font-bold text-gray-900">Other Documents (Optional)</label>
+                    <p class="text-xs text-gray-500 mb-3">{{ form.other_documents_file.help_text }}</p>
+                    {{ form.other_documents_file }}
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-6">
+            <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-bold rounded-lg text-lg px-5 py-4 text-center shadow-lg transition transform hover:-translate-y-0.5">
+                Submit Application
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

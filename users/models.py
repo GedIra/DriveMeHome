@@ -65,6 +65,13 @@ class DriverProfile(models.Model):
   license_number = models.CharField(max_length=20, unique=True, blank=True, null=True)
   license_expiry_date = models.DateField(blank=True, null=True)
   is_verified = models.BooleanField(default=False)
+
+  # --- VERIFICATION DOCUMENTS ---
+  driving_license_file = models.FileField(upload_to='drivers/licenses/', blank=True, null=True, help_text="Upload scanned copy of driving license")
+  national_id_file = models.FileField(upload_to='drivers/ids/', blank=True, null=True, help_text="Upload national ID or Passport")
+  criminal_record_file = models.FileField(upload_to='drivers/criminal_records/', blank=True, null=True, help_text="Certificate of non-conviction")
+  other_documents_file = models.FileField(upload_to='drivers/others/', blank=True, null=True, help_text="Any other relevant certifications")
+
   
   # Capabilities
   license_category = models.CharField(

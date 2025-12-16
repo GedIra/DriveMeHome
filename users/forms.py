@@ -12,6 +12,7 @@ import threading
 from django.template import loader
 from django.template.loader import render_to_string
 import threading
+from .models import DriverProfile, CustomerProfile
 
 User = get_user_model()
 
@@ -138,3 +139,94 @@ class CustomSetPasswordForm(SetPasswordForm):
             field.widget.attrs.update({
                 'class': 'w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none'
             })
+
+# --- PROFILE FORMS ---
+
+class DriverProfileForm(forms.ModelForm):
+    class Meta:
+        model = DriverProfile
+        fields = [
+            'profile_picture', 
+            'license_number', 
+            'license_expiry_date', 
+            'license_category', 
+            'transmission_capability'
+        ]
+        widgets = {
+            'license_expiry_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Apply Tailwind styles to all fields
+        for field_name, field in self.fields.items():
+            current_classes = field.widget.attrs.get('class', '')
+            
+            if isinstance(field.widget, (forms.TextInput, forms.DateInput, forms.Select)):
+                field.widget.attrs['class'] = f"{current_classes} bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+            
+            elif isinstance(field.widget, forms.FileInput):
+                field.widget.attrs['class'] = f"{current_classes} block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none"
+
+class CustomerProfileForm(forms.ModelForm):
+    class Meta:
+        model = CustomerProfile
+        fields = ['profile_picture']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, forms.FileInput):
+                field.widget.attrs['class'] = "block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none"
+
+class DriverApplicationForm(forms.ModelForm):
+    # Fields from CustomUser model for contact updates
+    email = forms.EmailField(label="Email Address", required=True, widget=forms.EmailInput(attrs={'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'}))
+    phone_number = forms.CharField(label="Phone Number", required=True, widget=forms.TextInput(attrs={'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'}))
+
+    class Meta:
+        model = DriverProfile
+        fields = [
+            'license_number',
+            'license_expiry_date',
+            'license_category',
+            'transmission_capability',
+            'driving_license_file',
+            'national_id_file',
+            'criminal_record_file',
+            'other_documents_file'
+        ]
+        widgets = {
+            'license_expiry_date': forms.DateInput(attrs={'type': 'date', 'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'}),
+            'license_number': forms.TextInput(attrs={'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'}),
+            'license_category': forms.Select(attrs={'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'}),
+            'transmission_capability': forms.Select(attrs={'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Pre-populate user fields
+        if self.instance and self.instance.user:
+            self.fields['email'].initial = self.instance.user.email
+            self.fields['phone_number'].initial = self.instance.user.phone_number
+        
+        # Apply standard styling to file inputs
+        for field_name in ['driving_license_file', 'national_id_file', 'criminal_record_file', 'other_documents_file']:
+            self.fields[field_name].widget.attrs.update({
+                'class': 'block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none'
+            })
+
+    def save(self, commit=True):
+        # Save DriverProfile fields
+        driver_profile = super().save(commit=False)
+        
+        # Save CustomUser fields
+        if driver_profile.user:
+            driver_profile.user.email = self.cleaned_data['email']
+            driver_profile.user.phone_number = self.cleaned_data['phone_number']
+            if commit:
+                driver_profile.user.save()
+        
+        if commit:
+            driver_profile.save()
+        return driver_profile
