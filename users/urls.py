@@ -15,6 +15,8 @@ from .views import (
     check_phone_existence,
     landing_view,
     activation_sent_view,
+    profile_view,
+    driver_application_view
 )
 from .forms import CustomPasswordResetForm, CustomSetPasswordForm
 
@@ -56,4 +58,8 @@ urlpatterns = [
     path('password-reset-complete/', 
          PasswordResetCompleteView.as_view(template_name='users/authentication/password_reset_complete.html'), 
          name='password_reset_complete'),
+         
+    # Profile & Application
+    path('profile/', profile_view, name='profile'),
+    path('driver/apply/', driver_application_view, name='driver_application'),     
 ]
