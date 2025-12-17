@@ -19,7 +19,11 @@ from .forms import (
     EmailThread, 
     DriverProfileForm, 
     CustomerProfileForm,
-    DriverApplicationForm
+    DriverApplicationForm,
+    CustomerProfileForm, 
+    SensitiveDataUpdateForm, 
+    DriverProfileUpdateForm,
+    DriverSensitiveUpdateForm
 )
 from .tokens import account_activation_token
 from .models import DriverProfile, CustomerProfile
@@ -220,3 +224,75 @@ def driver_application_view(request):
 # ... (Existing simple views like activation_sent_view if present) ...
 def activation_sent_view(request):
     return render(request, 'users/activation_sent.html')
+
+@login_required
+def customer_profile_settings_view(request):
+    user = request.user
+    if not user.is_customer:
+        return redirect('profile')
+
+    profile = user.customer_profile
+    
+    # 1. Profile Data Form (Non-sensitive)
+    profile_form = CustomerProfileForm(request.POST or None, request.FILES or None, instance=profile)
+    
+    # 2. Sensitive Data Form (User model)
+    sensitive_form = SensitiveDataUpdateForm(user, request.POST or None, instance=user)
+
+    if request.method == 'POST':
+        # Determine which form was submitted based on a hidden field or button name
+        if 'update_profile' in request.POST and profile_form.is_valid():
+            profile_form.save()
+            messages.success(request, "Profile picture updated.")
+            return redirect('customer_settings')
+            
+        if 'update_sensitive' in request.POST:
+            if sensitive_form.is_valid():
+                sensitive_form.save()
+                messages.success(request, "Account details updated successfully.")
+                return redirect('customer_settings')
+            else:
+                messages.error(request, "Failed to update account details. Check password.")
+
+    context = {
+        'profile_form': profile_form,
+        'sensitive_form': sensitive_form,
+        'page_title': 'Account Settings'
+    }
+    return render(request, 'users/customer_settings.html', context)
+
+@login_required
+def driver_profile_settings_view(request):
+    user = request.user
+    if not user.is_driver:
+        return redirect('profile')
+
+    profile = user.driver_profile
+    
+    # Forms
+    doc_form = DriverProfileUpdateForm(request.POST or None, request.FILES or None, instance=profile)
+    sensitive_form = DriverSensitiveUpdateForm(user, request.POST or None, instance=user)
+
+    if request.method == 'POST':
+        if 'update_docs' in request.POST and doc_form.is_valid():
+            driver = doc_form.save(commit=False)
+            # LOGIC: Changing license details revokes verification
+            if 'license_number' in doc_form.changed_data or 'driving_license_file' in doc_form.changed_data:
+                driver.is_verified = False
+                messages.warning(request, "License details changed. Your account is pending re-verification.")
+            driver.save()
+            messages.success(request, "Documents updated.")
+            return redirect('driver_settings')
+
+        if 'update_sensitive' in request.POST:
+            if sensitive_form.is_valid():
+                sensitive_form.save()
+                messages.success(request, "Contact info updated.")
+                return redirect('driver_settings')
+
+    context = {
+        'doc_form': doc_form,
+        'sensitive_form': sensitive_form,
+        'page_title': 'Driver Settings'
+    }
+    return render(request, 'users/driver_settings.html', context)

@@ -16,7 +16,9 @@ from .views import (
     landing_view,
     activation_sent_view,
     profile_view,
-    driver_application_view
+    driver_application_view,
+    customer_profile_settings_view,
+    driver_profile_settings_view
 )
 from .forms import CustomPasswordResetForm, CustomSetPasswordForm
 
@@ -61,5 +63,9 @@ urlpatterns = [
          
     # Profile & Application
     path('profile/', profile_view, name='profile'),
-    path('driver/apply/', driver_application_view, name='driver_application'),     
+    path('driver/apply/', driver_application_view, name='driver_application'),
+
+    #Profile Updates
+    path('settings/customer/', customer_profile_settings_view, name='customer_settings'),
+    path('settings/driver/', driver_profile_settings_view, name='driver_settings'),     
 ]

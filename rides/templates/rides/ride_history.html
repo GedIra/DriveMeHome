@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if user.is_driver %}My Trips{% else %}My Rides{% endif %} - DriveMe Home
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 mt-20 max-w-4xl">
+    
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <h1 class="text-2xl font-bold text-gray-800">
+            {% if user.is_driver %}Trip History{% else %}Ride History{% endif %}
+        </h1>
+        
+        <!-- Search & Filter Form -->
+        <form method="GET" class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <input type="text" name="q" value="{{ search_query|default:'' }}" class="block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500" placeholder="Search locations...">
+            </div>
+            
+            <select name="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                {% for code, label in status_choices %}
+                    <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- Rides List -->
+    <div class="space-y-4">
+        {% for ride in rides %}
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition p-5">
+            <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                
+                <!-- Ride Info -->
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded 
+                            {% if ride.status == 'COMPLETED' %}bg-green-100 text-green-800
+                            {% elif ride.status == 'CANCELLED' %}bg-red-100 text-red-800
+                            {% elif ride.status == 'IN_PROGRESS' %}bg-blue-100 text-blue-800
+                            {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                            {{ ride.get_status_display }}
+                        </span>
+                        <span class="text-xs text-gray-500">{{ ride.created_at|date:"M d, Y • H:i" }}</span>
+                    </div>
+                    
+                    <div class="flex items-start gap-3">
+                        <div class="flex flex-col items-center mt-1">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <div class="w-0.5 h-6 bg-gray-200 my-0.5"></div>
+                            <div class="w-2 h-2 bg-red-500 rounded-square"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900 truncate">{{ ride.pickup_address }}</p>
+                            <p class="text-sm text-gray-500 truncate mt-1">{{ ride.dropoff_address }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price & Action (Role Specific) -->
+                <div class="flex items-center justify-between md:flex-col md:items-end gap-4 min-w-[120px]">
+                    <div class="text-right">
+                        {% if user.is_driver %}
+                            <!-- Driver View: Earnings -->
+                            {% if ride.driver_earnings %}
+                                <p class="text-lg font-bold text-green-600">+ RWF {{ ride.driver_earnings }}</p>
+                                <p class="text-xs text-gray-400">Earnings</p>
+                            {% else %}
+                                <p class="text-lg font-bold text-gray-400">--</p>
+                                <p class="text-xs text-gray-400">Pending</p>
+                            {% endif %}
+                        {% else %}
+                            <!-- Customer View: Total Cost -->
+                            {% if ride.final_price %}
+                                <p class="text-lg font-bold text-gray-900">RWF {{ ride.final_price }}</p>
+                            {% else %}
+                                <p class="text-lg font-bold text-gray-500">~ RWF {{ ride.estimated_price }}</p>
+                                <p class="text-xs text-gray-400">Estimated</p>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Modal Trigger Button -->
+                    <button data-modal-target="ride-modal-{{ ride.id }}" data-modal-toggle="ride-modal-{{ ride.id }}" 
+                        class="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center">
+                        View Details
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DETAILS MODAL -->
+        <div id="ride-modal-{{ ride.id }}" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+            <div class="relative w-full max-w-md max-h-full">
+                <!-- Modal content -->
+                <div class="relative bg-white rounded-lg shadow">
+                    <button type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center" data-modal-hide="ride-modal-{{ ride.id }}">
+                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg>
+                        <span class="sr-only">Close modal</span>
+                    </button>
+                    
+                    <div class="px-6 py-6 lg:px-8">
+                        <h3 class="mb-4 text-xl font-medium text-gray-900">
+                            {% if user.is_driver %}Trip Details{% else %}Ride Details{% endif %}
+                        </h3>
+                        
+                        <div class="space-y-4">
+                            <!-- User Info Section -->
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
+                                    {% if user.is_driver %}
+                                        <!-- Driver sees Client Info -->
+                                        {{ ride.customer.user.username|slice:":1"|upper }}
+                                    {% else %}
+                                        <!-- Client sees Driver Info -->
+                                        {% if ride.driver %}
+                                            {{ ride.driver.user.username|slice:":1"|upper }}
+                                        {% else %}?{% endif %}
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-gray-900">
+                                        {% if user.is_driver %}
+                                            Client: {{ ride.customer.user.username }}
+                                        {% else %}
+                                            Driver: {{ ride.driver.user.username|default:"Searching..." }}
+                                        {% endif %}
+                                    </p>
+                                    <p class="text-xs text-gray-500">
+                                        Vehicle: {{ ride.vehicle.name }} ({{ ride.vehicle.get_transmission_type_display }})
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Stats -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 uppercase">Distance</p>
+                                    <p class="font-medium">{{ ride.distance_km }} km</p>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 uppercase">Duration</p>
+                                    <p class="font-medium">{{ ride.estimated_duration_min|default:"--" }} min</p>
+                                </div>
+                            </div>
+
+                            <!-- Addresses -->
+                            <div class="space-y-3 pt-2">
+                                <div>
+                                    <p class="text-xs text-gray-500 uppercase mb-1">Pickup</p>
+                                    <p class="text-sm text-gray-800">{{ ride.pickup_address }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 uppercase mb-1">Dropoff</p>
+                                    <p class="text-sm text-gray-800">{{ ride.dropoff_address }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Financial Breakdown (Role Specific) -->
+                            <div class="border-t pt-4 mt-4">
+                                {% if user.is_driver %}
+                                    <!-- Driver Financials -->
+                                    <div class="flex justify-between items-center mb-1 text-sm text-gray-500">
+                                        <span>Total Fare Collected</span>
+                                        <span>RWF {{ ride.final_price|default:ride.estimated_price }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center mb-1 text-sm text-gray-500">
+                                        <span>Platform Fee</span>
+                                        <span>- RWF {{ ride.platform_fee|default:"0" }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">
+                                        <span class="font-bold text-gray-700">Net Earnings</span>
+                                        <span class="text-xl font-bold text-green-600">
+                                            RWF {{ ride.driver_earnings|default:"--" }}
+                                        </span>
+                                    </div>
+                                {% else %}
+                                    <!-- Customer Financials -->
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-bold text-gray-700">Total Charged</span>
+                                        <span class="text-xl font-bold text-blue-600">
+                                            RWF {{ ride.final_price|default:ride.estimated_price }}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+            <div class="text-center py-12 bg-gray-50 rounded-lg">
+                <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                <p class="text-gray-500">No rides found.</p>
+                {% if user.is_customer %}
+                    <a href="{% url 'book_ride' %}" class="text-blue-600 font-medium hover:underline mt-2 inline-block">Book a ride now</a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="flex items-center justify-center mt-8 space-x-2">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&status={{ selected_status }}&q={{ search_query }}" 
+               class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                Previous
+            </a>
+        {% endif %}
+
+        <span class="px-4 py-2 text-sm text-gray-700">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&status={{ selected_status }}&q={{ search_query }}" 
+               class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                Next
+            </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

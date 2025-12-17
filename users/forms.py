@@ -13,6 +13,7 @@ from django.template import loader
 from django.template.loader import render_to_string
 import threading
 from .models import DriverProfile, CustomerProfile
+from django.contrib.auth import authenticate
 
 User = get_user_model()
 
@@ -230,3 +231,68 @@ class DriverApplicationForm(forms.ModelForm):
         if commit:
             driver_profile.save()
         return driver_profile
+    
+class SensitiveDataUpdateForm(forms.ModelForm):
+    """
+    Base form for updating sensitive data like email/phone.
+    Requires current password to save.
+    """
+    current_password = forms.CharField(
+        label="Confirm Password",
+        widget=forms.PasswordInput(attrs={'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'}),
+        help_text="Required to save changes."
+    )
+
+    class Meta:
+        model = User
+        fields = ['email', 'phone_number']
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+        # Style fields
+        for field in ['email', 'phone_number']:
+            self.fields[field].widget.attrs.update({'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'})
+
+    def clean_current_password(self):
+        password = self.cleaned_data.get('current_password')
+        if not self.user.check_password(password):
+            raise forms.ValidationError("Incorrect password.")
+        return password
+
+class CustomerProfileUpdateForm(forms.ModelForm):
+    """
+    For updating non-sensitive customer profile data (e.g., Picture).
+    """
+    class Meta:
+        model = CustomerProfile
+        fields = ['profile_picture'] # Add other fields like 'preferred_name' if added to model
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['profile_picture'].widget.attrs.update({'class': 'block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50'})
+
+class DriverSensitiveUpdateForm(SensitiveDataUpdateForm):
+    """
+    For drivers updating email/phone. 
+    Inherits password check from SensitiveDataUpdateForm.
+    """
+    pass
+
+class DriverProfileUpdateForm(forms.ModelForm):
+    """
+    For drivers updating documents/license.
+    WARNING: Saving this will trigger re-verification logic in the view.
+    """
+    class Meta:
+        model = DriverProfile
+        fields = ['profile_picture', 'license_number', 'license_expiry_date', 'driving_license_file']
+        widgets = {
+            'license_expiry_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Styling loop
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'})

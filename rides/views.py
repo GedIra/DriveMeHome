@@ -7,6 +7,7 @@ from django.views.decorators.http import require_POST, require_GET
 from django.conf import settings
 from django.db.models import Q
 from django.contrib import messages
+from django.core.paginator import Paginator # Added for pagination
 from users.models import CustomerVehicle, CustomerProfile, PreferredDestination, DriverProfile
 from .models import PricingConfiguration, Ride
 from .utils import get_distance_and_duration
@@ -26,16 +27,23 @@ def book_ride_view(request):
             dropoff_lat = request.POST.get('dropoff_latitude')
             dropoff_lng = request.POST.get('dropoff_longitude')
             vehicle_id = request.POST.get('vehicle')
-            pickup_addr = request.POST.get('pickup') # Raw text address
-            dropoff_addr = request.POST.get('dropoff') # Raw text address
+            # Use 'pickup' and 'dropoff' from form names, fallback to empty string
+            pickup_addr = request.POST.get('pickup', '') 
+            dropoff_addr = request.POST.get('dropoff', '')
             
             # Booking Options
             schedule_time = request.POST.get('schedule_time') # Can be empty
             driver_selection_mode = request.POST.get('driver_selection_mode') # 'auto' or driver_id
             
+            # Basic Validation
             if not all([pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, vehicle_id]):
                 messages.error(request, "Please fill in all location and vehicle details.")
                 return redirect('book_ride')
+
+            # Ensure user has profile
+            if not hasattr(request.user, 'customer_profile'):
+                 messages.error(request, "Customer profile not found.")
+                 return redirect('profile') # Redirect to profile creation if needed
 
             customer_profile = request.user.customer_profile
             vehicle = get_object_or_404(CustomerVehicle, id=vehicle_id, customer=customer_profile)
@@ -53,8 +61,8 @@ def book_ride_view(request):
                 scheduled_for=schedule_time if schedule_time else None
             )
             
-            # 3. Calculate Fare (Calls Mapbox)
-            ride.estimate_fare() # This saves the ride object
+            # 3. Calculate Fare (Calls Mapbox) - This also saves the ride initially
+            ride.estimate_fare() 
             
             # 4. Handle Driver Assignment
             if driver_selection_mode == 'auto':
@@ -68,16 +76,16 @@ def book_ride_view(request):
                     qualified_drivers = qualified_drivers.filter(transmission_capability='BOTH')
 
                 # Prefer AVAILABLE, then BUSY
-                # Sort: 0 for AVAILABLE, 1 for BUSY
+                # Sort: 0 for AVAILABLE, 1 for BUSY. Negative rating for desc sort.
                 best_driver = sorted(
                     qualified_drivers, 
-                    key=lambda d: (0 if d.current_status == 'AVAILABLE' else 1, -d.average_rating)
+                    key=lambda d: (0 if d.current_status == DriverProfile.DriverStatus.AVAILABLE else 1, -d.average_rating)
                 )
 
                 if best_driver:
                     ride.driver = best_driver[0]
                     ride.status = Ride.RideStatus.DRIVER_ASSIGNED
-                    if best_driver[0].current_status == 'BUSY':
+                    if best_driver[0].current_status == DriverProfile.DriverStatus.BUSY:
                         messages.warning(request, f"Ride booked! Driver {ride.driver.user.username} is currently busy but will come to you next.")
                     else:
                         messages.success(request, f"Ride booked! Driver {ride.driver.user.username} is on the way.")
@@ -98,7 +106,7 @@ def book_ride_view(request):
 
             ride.save()
             
-            # TODO: Redirect to a "Track Ride" page. For now, reload.
+            # Redirect to avoid resubmission. Ideally to a 'ride_detail' page.
             return redirect('book_ride')
 
         except Exception as e:
@@ -132,6 +140,9 @@ def get_qualified_drivers_view(request):
         return JsonResponse({'success': False, 'error': 'Vehicle ID required'}, status=400)
 
     try:
+        if not hasattr(request.user, 'customer_profile'):
+             return JsonResponse({'success': False, 'error': 'User profile not found'}, status=403)
+
         vehicle = CustomerVehicle.objects.get(id=vehicle_id, customer=request.user.customer_profile)
         
         # 1. Filter by License Score
@@ -164,6 +175,51 @@ def get_qualified_drivers_view(request):
 
     except CustomerVehicle.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Vehicle not found'}, status=404)
+    
+@login_required
+def ride_history_view(request):
+    """
+    Displays a list of past rides for the user with filters and pagination.
+    Differentiates logic for Drivers vs Customers.
+    """
+    user = request.user
+    rides = Ride.objects.none()
+
+    # 1. Determine User Role & Fetch Rides
+    if user.is_driver and hasattr(user, 'driver_profile'):
+        rides = Ride.objects.filter(driver=user.driver_profile)
+    elif user.is_customer and hasattr(user, 'customer_profile'):
+        rides = Ride.objects.filter(customer=user.customer_profile)
+    
+    # 2. Filtering
+    status_filter = request.GET.get('status')
+    if status_filter:
+        rides = rides.filter(status=status_filter)
+
+    # 3. Search (Address)
+    search_query = request.GET.get('q')
+    if search_query:
+        rides = rides.filter(
+            Q(pickup_address__icontains=search_query) | 
+            Q(dropoff_address__icontains=search_query)
+        )
+
+    # 4. Sorting (Most recent first)
+    rides = rides.order_by('-created_at')
+
+    # 5. Pagination
+    paginator = Paginator(rides, 10) # 10 rides per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'rides': page_obj, # Pass page_obj as 'rides' for loop compatibility
+        'page_obj': page_obj, # Pass explicitly for pagination controls
+        'status_choices': Ride.RideStatus.choices,
+        'selected_status': status_filter,
+        'search_query': search_query
+    }
+    return render(request, 'rides/ride_history.html', context)
 
 @login_required
 @require_POST
@@ -283,6 +339,8 @@ def driver_dashboard_view(request):
             query = query.filter(vehicle__transmission_type='AUTO')
             
         # License Score Filter (Driver score >= Vehicle required score)
+        # Note: We need to annotate or loop. For MVP, simple loop or DB filter if possible.
+        # Since required_license_score is on Vehicle model, we can filter:
         query = query.filter(vehicle__required_license_score__lte=driver.license_score)
         
         available_rides = query.order_by('-created_at')
