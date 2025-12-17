@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Driver Dashboard - DriveMe Home{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 mt-20">
+    
+    <!-- Header & Status Toggle -->
+    <div class="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Welcome, {{ user.username }}</h1>
+            <p class="text-gray-500 text-sm mt-1">Manage your availability and rides.</p>
+        </div>
+        
+        <div class="flex items-center gap-4 mt-4 md:mt-0">
+            <span id="status-label" class="text-sm font-semibold 
+                {% if driver.current_status == 'AVAILABLE' %}text-green-600{% else %}text-gray-500{% endif %}">
+                {{ driver.get_current_status_display }}
+            </span>
+            
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="toggle-online" class="sr-only peer" {% if driver.current_status == 'AVAILABLE' %}checked{% endif %}>
+                <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                <span class="ml-3 text-sm font-medium text-gray-900">Go Online</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- LEFT COLUMN: Job Queue / Active Ride -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- SECTION A: ACTIVE RIDE (If any) -->
+            {% if active_ride %}
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 shadow-sm">
+                <div class="flex justify-between items-start mb-4">
+                    <h2 class="text-xl font-bold text-blue-900 flex items-center">
+                        <span class="relative flex h-3 w-3 mr-3">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                        </span>
+                        Active Ride
+                    </h2>
+                    <span class="bg-blue-200 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">{{ active_ride.get_status_display }}</span>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <p class="text-xs text-blue-500 uppercase font-bold mb-1">Pickup</p>
+                        <p class="text-gray-800 font-medium">{{ active_ride.pickup_address }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-blue-500 uppercase font-bold mb-1">Dropoff</p>
+                        <p class="text-gray-800 font-medium">{{ active_ride.dropoff_address }}</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <a href="#" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-3 rounded-lg font-semibold shadow-md transition">
+                        Open Navigation
+                    </a>
+                    <button class="flex-1 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 py-3 rounded-lg font-semibold transition">
+                        Contact Client
+                    </button>
+                </div>
+            </div>
+            
+            <!-- SECTION B: JOB REQUESTS (Only if online & no active ride) -->
+            {% else %}
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Incoming Requests</h2>
+                
+                {% if driver.current_status == 'OFFLINE' %}
+                    <div class="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                        <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                        <p class="text-gray-500">You are offline. Go online to see requests.</p>
+                    </div>
+                {% elif available_rides %}
+                    <div class="space-y-4">
+                        {% for ride in available_rides %}
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:border-blue-300 transition cursor-pointer group">
+                            <div class="flex justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">RWF {{ ride.estimated_price }}</div>
+                                    <span class="text-gray-400 text-xs">• {{ ride.distance_km }} km</span>
+                                </div>
+                                <span class="text-gray-400 text-xs">{{ ride.created_at|timesince }} ago</span>
+                            </div>
+                            
+                            <div class="flex items-start gap-3 mb-4">
+                                <div class="flex flex-col items-center mt-1">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <div class="w-0.5 h-8 bg-gray-200 my-0.5"></div>
+                                    <div class="w-2 h-2 bg-red-500 rounded-square"></div>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900 line-clamp-1">{{ ride.pickup_address }}</p>
+                                    <p class="text-sm font-medium text-gray-900 mt-2 line-clamp-1">{{ ride.dropoff_address }}</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between border-t pt-3 border-gray-100">
+                                <div class="text-xs text-gray-500">
+                                    Vehicle: <span class="font-semibold text-gray-700">{{ ride.vehicle.name }} ({{ ride.vehicle.get_transmission_type_display }})</span>
+                                </div>
+                                <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition">
+                                    Accept
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-12 bg-white rounded-xl shadow-sm">
+                        <div class="animate-pulse flex justify-center mb-4">
+                            <div class="h-3 w-3 bg-blue-500 rounded-full mr-1"></div>
+                            <div class="h-3 w-3 bg-blue-500 rounded-full mr-1 animation-delay-200"></div>
+                            <div class="h-3 w-3 bg-blue-500 rounded-full animation-delay-400"></div>
+                        </div>
+                        <p class="text-gray-500">Searching for nearby rides...</p>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- RIGHT COLUMN: Stats & Earnings -->
+        <div class="space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Today's Earnings</h3>
+                <div class="text-3xl font-bold text-green-600 mb-1">RWF 0</div>
+                <p class="text-xs text-gray-400">0 Rides completed</p>
+                
+                <div class="mt-6 pt-6 border-t border-gray-100">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-sm text-gray-600">Performance</span>
+                        <span class="text-sm font-bold text-gray-800">{{ driver.average_rating }} ★</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                        <div class="bg-yellow-400 h-1.5 rounded-full" style="width: 90%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // AJAX for toggling status
+    const toggle = document.getElementById('toggle-online');
+    const label = document.getElementById('status-label');
+    
+    if(toggle) {
+        toggle.addEventListener('change', async () => {
+            const newStatus = toggle.checked ? 'AVAILABLE' : 'OFFLINE';
+            try {
+                const res = await fetch("{% url 'api_update_driver_status' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    label.textContent = data.display_status;
+                    label.className = `text-sm font-semibold ${newStatus === 'AVAILABLE' ? 'text-green-600' : 'text-gray-500'}`;
+                } else {
+                    alert('Error updating status');
+                    toggle.checked = !toggle.checked; // Revert
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Connection error');
+                toggle.checked = !toggle.checked;
+            }
+        });
+    }
+</script>
+{% endblock %}

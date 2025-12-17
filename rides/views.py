@@ -165,15 +165,14 @@ def get_qualified_drivers_view(request):
     except CustomerVehicle.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Vehicle not found'}, status=404)
 
-# ... (add_vehicle_view and get_ride_estimate_view remain same) ...
 @login_required
 @require_POST
 def add_vehicle_view(request):
-    # (Keep previous implementation)
     try:
         data = json.loads(request.body)
         if not hasattr(request.user, 'customer_profile'):
             return JsonResponse({'success': False, 'error': 'User profile not found.'}, status=400)
+            
         profile = request.user.customer_profile
         vehicle = CustomerVehicle.objects.create(
             customer=profile,
@@ -182,9 +181,14 @@ def add_vehicle_view(request):
             transmission_type=data.get('transmission'),
             vehicle_category=data.get('category')
         )
+        
         return JsonResponse({
             'success': True,
-            'vehicle': {'id': vehicle.id, 'name': vehicle.name, 'transmission': vehicle.get_transmission_type_display()}
+            'vehicle': {
+                'id': vehicle.id,
+                'name': vehicle.name,
+                'transmission': vehicle.get_transmission_type_display()
+            }
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
@@ -192,29 +196,133 @@ def add_vehicle_view(request):
 @login_required
 @require_GET
 def get_ride_estimate_view(request):
-    # (Keep previous implementation)
+    """
+    API to calculate distance, duration, and price without saving to DB.
+    Expects GET params: pickup_lat, pickup_lng, dropoff_lat, dropoff_lng
+    """
     try:
         p_lat = request.GET.get('pickup_lat')
         p_lng = request.GET.get('pickup_lng')
         d_lat = request.GET.get('dropoff_lat')
         d_lng = request.GET.get('dropoff_lng')
+
         if not all([p_lat, p_lng, d_lat, d_lng]):
             return JsonResponse({'success': False, 'error': 'Missing coordinates'}, status=400)
+
+        # Call the Mapbox Utility
         metrics = get_distance_and_duration(p_lat, p_lng, d_lat, d_lng)
+        
         if not metrics:
             return JsonResponse({'success': False, 'error': 'Could not calculate route path'}, status=400)
+
+        # Calculate Price
         config = PricingConfiguration.objects.filter(is_active=True).first()
         estimated_price = 0
         currency = "RWF"
+        
         if config:
-            cost = config.base_fare + (metrics['distance_km'] * config.price_per_km) + (metrics['duration_min'] * config.price_per_minute)
+            cost = config.base_fare + \
+                   (metrics['distance_km'] * config.price_per_km) + \
+                   (metrics['duration_min'] * config.price_per_minute)
             estimated_price = round(cost)
+        
+        # Fallback if no config (optional, but good for MVP)
+        elif not config: 
+             # Basic fallback logic if needed, or just return 0
+             cost = 2000 + (metrics['distance_km'] * 1000)
+             estimated_price = round(cost)
+
         return JsonResponse({
             'success': True,
             'distance_km': round(metrics['distance_km'], 1),
             'duration_min': round(metrics['duration_min']),
             'estimated_price': estimated_price,
             'currency': currency
+        })
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+# --- NEW DRIVER VIEWS ---
+
+@login_required
+def driver_dashboard_view(request):
+    """
+    Main dashboard for drivers.
+    """
+    # 1. Security Check
+    if not request.user.is_driver:
+        return redirect('book_ride') # Or error page
+    
+    # 2. Get Profile
+    try:
+        driver = request.user.driver_profile
+    except DriverProfile.DoesNotExist:
+        # Should be created by signal, but safety net:
+        return redirect('profile') 
+
+    # 3. Check for Active Ride (IN_PROGRESS or ASSIGNED)
+    active_ride = Ride.objects.filter(
+        driver=driver, 
+        status__in=[Ride.RideStatus.DRIVER_ASSIGNED, Ride.RideStatus.DRIVER_ARRIVED, Ride.RideStatus.IN_PROGRESS]
+    ).first()
+
+    # 4. Get Available Rides (If no active ride and online)
+    available_rides = []
+    if not active_ride and driver.current_status == DriverProfile.DriverStatus.AVAILABLE:
+        # Filter logic: 
+        # - Status REQUESTED
+        # - Vehicle category matches driver license score logic
+        # - Transmission matches
+        
+        # Base query
+        query = Ride.objects.filter(status=Ride.RideStatus.REQUESTED)
+        
+        # Transmission Filter
+        if driver.transmission_capability == DriverProfile.TransmissionType.AUTOMATIC_ONLY:
+            query = query.filter(vehicle__transmission_type='AUTO')
+            
+        # License Score Filter (Driver score >= Vehicle required score)
+        query = query.filter(vehicle__required_license_score__lte=driver.license_score)
+        
+        available_rides = query.order_by('-created_at')
+
+    context = {
+        'driver': driver,
+        'active_ride': active_ride,
+        'available_rides': available_rides
+    }
+    return render(request, 'rides/driver_dashboard.html', context)
+
+@login_required
+@require_POST
+def update_driver_status_api(request):
+    """
+    API to toggle Online/Offline status.
+    """
+    try:
+        if not hasattr(request.user, 'driver_profile'):
+            return JsonResponse({'success': False, 'error': 'Not a driver'}, status=403)
+            
+        data = json.loads(request.body)
+        new_status = data.get('status')
+        
+        if new_status not in ['AVAILABLE', 'OFFLINE']:
+            return JsonResponse({'success': False, 'error': 'Invalid status'}, status=400)
+            
+        driver = request.user.driver_profile
+        
+        # Don't allow going offline if currently in a ride
+        if new_status == 'OFFLINE' and driver.current_status == 'BUSY':
+             return JsonResponse({'success': False, 'error': 'Cannot go offline while busy'}, status=400)
+
+        driver.current_status = new_status
+        driver.save()
+        
+        return JsonResponse({
+            'success': True, 
+            'new_status': new_status,
+            'display_status': driver.get_current_status_display()
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
