@@ -1,33 +1,25 @@
 document.addEventListener('DOMContentLoaded', function() {
     
     // --- 1. CONFIGURATION ---
-    if (typeof mapboxgl === 'undefined') {
-        console.error("Mapbox GL JS failed to load.");
-        const mapContainer = document.getElementById('map');
-        if (mapContainer) {
-            mapContainer.innerHTML = '<div class="flex items-center justify-center h-full text-red-500 bg-gray-100 p-4 text-center">Map unavailable. Check internet connection.</div>';
-        }
+    if (typeof mapboxgl === 'undefined' || !window.mapboxAccessToken) {
+        console.error("Mapbox Error");
         return;
     }
-
-    if (!window.mapboxAccessToken) {
-        console.error("Mapbox Access Token is missing!");
-        alert("System Error: Map configuration missing.");
-        return;
-    }
-    
     mapboxgl.accessToken = window.mapboxAccessToken;
-    const DEFAULT_CENTER = [30.0619, -1.9441]; // Kigali
-    const DEFAULT_ZOOM = 12;
-
+    
     const map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/streets-v12',
-        center: DEFAULT_CENTER,
-        zoom: DEFAULT_ZOOM
+        center: [30.0619, -1.9441],
+        zoom: 12
     });
-
     map.addControl(new mapboxgl.NavigationControl());
+
+    // --- 2. MAP LOGIC (Markers, Route, Estimate) ---
+    // (Keep previous map logic for drawing lines and calculating estimates)
+    const pickupMarker = new mapboxgl.Marker({ color: '#22c55e', draggable: true });
+    const dropoffMarker = new mapboxgl.Marker({ color: '#ef4444', draggable: true });
+    let pickupCoords = null; let dropoffCoords = null; let debounceTimer = null;
 
     let mapLoaded = false;
     map.on('load', () => {
@@ -68,40 +60,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
     setTimeout(() => map.resize(), 1000);
 
-    // --- 3. MARKER SETUP ---
-    const pickupMarker = new mapboxgl.Marker({ color: '#22c55e', draggable: true });
-    const dropoffMarker = new mapboxgl.Marker({ color: '#ef4444', draggable: true });
-
-    let pickupCoords = null;
-    let dropoffCoords = null;
-    let debounceTimer = null;
-
-    // --- 4. CORE LOGIC ---
-
     function updateLocationState(type, lng, lat, address = null) {
-        const input = document.getElementById(`${type}-input`);
         const latInput = document.getElementById(`id_${type}_latitude`);
         const lngInput = document.getElementById(`id_${type}_longitude`);
+        const input = document.getElementById(`${type}-input`);
         
-        if(!input || !latInput || !lngInput) return;
-
-        const marker = type === 'pickup' ? pickupMarker : dropoffMarker;
+        if(!latInput) return; // Safety check
 
         if (type === 'pickup') pickupCoords = { lng, lat };
         else dropoffCoords = { lng, lat };
 
         latInput.value = lat;
         lngInput.value = lng;
-
+        
+        const marker = type === 'pickup' ? pickupMarker : dropoffMarker;
         marker.setLngLat([lng, lat]).addTo(map);
 
-        if (address) {
-            input.value = address;
-        } else {
-            reverseGeocode(lng, lat).then(addr => {
-                input.value = addr;
-            });
-        }
+        if(address) input.value = address;
+        else reverseGeocode(lng, lat).then(a => input.value = a);
 
         triggerUpdates();
     }
@@ -155,64 +131,182 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // --- 3. SCHEDULING TOGGLE ---
+    const timeNow = document.getElementById('time-now');
+    const timeLater = document.getElementById('time-later');
+    const scheduleContainer = document.getElementById('schedule-container');
+
+    function toggleSchedule() {
+        if (timeLater.checked) {
+            scheduleContainer.classList.remove('hidden');
+        } else {
+            scheduleContainer.classList.add('hidden');
+            // Clear input
+            scheduleContainer.querySelector('input').value = '';
+        }
+    }
+    if(timeNow && timeLater) {
+        timeNow.addEventListener('change', toggleSchedule);
+        timeLater.addEventListener('change', toggleSchedule);
+    }
+
+    // --- 4. DRIVER SELECTION LOGIC ---
+    const btnOpenModal = document.getElementById('btn-open-driver-modal');
+    const driverModal = document.getElementById('driver-selection-modal');
+    const driverListContainer = document.getElementById('driver-list-container');
+    const bookingForm = document.getElementById('booking-form');
+    const modeInput = document.getElementById('id_driver_selection_mode');
+
+    // FLOWBITE MODAL INSTANCE
+    // We manually toggle classes for simplicity if Flowbite JS instance isn't perfect
+    if(btnOpenModal) {
+        btnOpenModal.addEventListener('click', () => {
+            // Validate form first
+            if (!pickupCoords || !dropoffCoords) {
+                alert("Please select pickup and dropoff locations.");
+                return;
+            }
+            const vehicleId = document.getElementById('id_vehicle').value;
+            if(!vehicleId) {
+                alert("Please select a vehicle.");
+                return;
+            }
+
+            // Show Modal
+            driverModal.classList.remove('hidden');
+            driverModal.classList.add('flex'); // Centered via flex
+            
+            // Fetch Drivers
+            fetchDrivers(vehicleId);
+        });
+    }
+
+    // Close Modal logic
+    document.querySelectorAll('[data-modal-hide="driver-selection-modal"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            driverModal.classList.add('hidden');
+            driverModal.classList.remove('flex');
+        });
+    });
+
+    async function fetchDrivers(vehicleId) {
+        driverListContainer.innerHTML = '<div class="text-center p-4">Loading drivers...</div>';
+        try {
+            const res = await fetch(`${window.getDriversUrl}?vehicle_id=${vehicleId}`);
+            const data = await res.json();
+            
+            if(data.success) {
+                renderDrivers(data.drivers);
+            } else {
+                driverListContainer.innerHTML = `<div class="text-red-500 text-center">${data.error}</div>`;
+            }
+        } catch(e) {
+            driverListContainer.innerHTML = '<div class="text-red-500 text-center">Failed to load drivers.</div>';
+        }
+    }
+
+    function renderDrivers(drivers) {
+        if(drivers.length === 0) {
+            driverListContainer.innerHTML = '<div class="text-center p-4 text-gray-500">No qualified drivers found for this vehicle type.</div>';
+            return;
+        }
+
+        driverListContainer.innerHTML = '';
+        drivers.forEach(driver => {
+            const el = document.createElement('div');
+            el.className = 'bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-3 flex justify-between items-center driver-card';
+            
+            // Status Color
+            const statusColor = driver.status_code === 'AVAILABLE' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+            
+            el.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+                        ${driver.avatar ? `<img src="${driver.avatar}" class="w-full h-full object-cover">` : '<svg class="w-full h-full text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>'}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-800">${driver.name}</h4>
+                        <div class="flex items-center text-xs mt-1 gap-2">
+                            <span class="px-2 py-0.5 rounded-full ${statusColor} font-medium">${driver.status}</span>
+                            <span class="flex items-center text-yellow-500">
+                                <svg class="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                ${driver.rating}
+                            </span>
+                            <span class="text-gray-400">| Cat: ${driver.category}</span>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn-select-driver text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium" data-id="${driver.id}">
+                    Select
+                </button>
+            `;
+            
+            // Manual Select Event
+            el.querySelector('.btn-select-driver').addEventListener('click', () => {
+                submitBooking(driver.id);
+            });
+
+            driverListContainer.appendChild(el);
+        });
+    }
+
+    // Auto Assign Event
+    const btnAutoAssign = document.getElementById('btn-auto-assign');
+    if (btnAutoAssign) {
+        btnAutoAssign.addEventListener('click', () => {
+            submitBooking('auto');
+        });
+    }
+
+    function submitBooking(mode) {
+        modeInput.value = mode;
+        // Trigger the real form submit
+        bookingForm.submit();
+    }
+
+    // --- 5. HELPERS (Geocoding, Estimate, etc. - Keep existing logic from previous turn) ---
+    
+    // For brevity, ensuring the fetch logic for estimate uses the window.estimateUrl
     async function calculateEstimate() {
         if (!pickupCoords || !dropoffCoords) return;
-
         const card = document.getElementById('estimate-card');
         const priceEl = document.getElementById('est-price');
-        const reqBtn = document.getElementById('btn-request');
+        const reqBtn = document.getElementById('btn-open-driver-modal'); // Changed target ID
         
-        if (card) {
-            card.classList.remove('hidden');
-            card.classList.add('animate-pulse');
-        }
-        if (priceEl) priceEl.innerText = "Calculating...";
-        if (reqBtn) {
+        card.classList.remove('hidden');
+        priceEl.innerText = "Calculating...";
+        if(reqBtn) {
             reqBtn.disabled = true;
-            reqBtn.classList.remove('bg-blue-700', 'hover:bg-blue-800');
             reqBtn.classList.add('bg-gray-300', 'cursor-not-allowed');
         }
 
         try {
             const params = new URLSearchParams({
-                pickup_lat: pickupCoords.lat,
-                pickup_lng: pickupCoords.lng,
-                dropoff_lat: dropoffCoords.lat,
-                dropoff_lng: dropoffCoords.lng
+                pickup_lat: pickupCoords.lat, pickup_lng: pickupCoords.lng,
+                dropoff_lat: dropoffCoords.lat, dropoff_lng: dropoffCoords.lng
             });
-
-            // Use dynamic URL injected from Template
-            const url = window.estimateUrl || '/api/estimate-ride/';
-            const res = await fetch(`${url}?${params}`);
+            const res = await fetch(`${window.estimateUrl}?${params}`);
             const data = await res.json();
 
-            if (card) card.classList.remove('animate-pulse');
-
             if (data.success) {
-                if (priceEl) priceEl.textContent = `${data.currency || 'RWF'} ${data.estimated_price.toLocaleString()}`;
+                priceEl.textContent = `${data.currency || 'RWF'} ${data.estimated_price.toLocaleString()}`;
+                document.getElementById('est-distance').textContent = `${data.distance_km} km`;
+                document.getElementById('est-duration').textContent = `${data.duration_min} min`;
+                card.classList.remove('animate-pulse');
                 
-                const distEl = document.getElementById('est-distance');
-                const durEl = document.getElementById('est-duration');
-                
-                if (distEl) distEl.textContent = `${data.distance_km} km`;
-                if (durEl) durEl.textContent = `${data.duration_min} min`;
-                
-                if (reqBtn) {
+                if(reqBtn) {
                     reqBtn.disabled = false;
                     reqBtn.classList.remove('bg-gray-300', 'cursor-not-allowed');
-                    reqBtn.classList.add('bg-blue-700', 'hover:bg-blue-800', 'shadow-lg');
+                    reqBtn.classList.add('bg-blue-700', 'hover:bg-blue-800');
                 }
             } else {
-                if (priceEl) priceEl.textContent = 'Unavailable';
-                console.error("Backend Error:", data.error);
+                priceEl.textContent = 'Unavailable';
             }
         } catch (e) {
-            console.error("Estimate Error:", e);
-            if (card) card.classList.remove('animate-pulse');
-            if (priceEl) priceEl.textContent = 'Error';
+            priceEl.textContent = 'Error';
         }
     }
-
+    
     // --- 5. GEOCODING UTILS ---
     async function reverseGeocode(lng, lat) {
         const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}&limit=1`;
@@ -234,6 +328,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- 6. EVENT LISTENERS ---
+    
+    // Dragging Pins
     pickupMarker.on('dragend', () => {
         const lngLat = pickupMarker.getLngLat();
         updateLocationState('pickup', lngLat.lng, lngLat.lat);
@@ -244,6 +340,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateLocationState('dropoff', lngLat.lng, lngLat.lat);
     });
 
+    // Saved Places Buttons
     document.querySelectorAll('.saved-place-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const target = btn.dataset.target; 
@@ -254,6 +351,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Autocomplete Setup
     function setupAutocomplete(type) {
         const input = document.getElementById(`${type}-input`);
         const results = document.getElementById(`${type}-results`);
@@ -266,9 +364,15 @@ document.addEventListener('DOMContentLoaded', function() {
             timeout = setTimeout(async () => {
                 const query = input.value;
                 if (query.length < 3) { results.classList.add('hidden'); return; }
+                
                 const features = await searchLocation(query);
                 results.innerHTML = '';
-                if (!features || features.length === 0) { results.classList.add('hidden'); return; }
+                
+                if (!features || features.length === 0) {
+                    results.classList.add('hidden');
+                    return;
+                }
+
                 results.classList.remove('hidden');
                 features.forEach(feature => {
                     const li = document.createElement('li');
@@ -284,6 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         });
 
+        // Hide results on click outside
         document.addEventListener('click', (e) => {
             if (e.target !== input && e.target !== results) results.classList.add('hidden');
         });
@@ -308,6 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
         vehicleForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = vehicleForm.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
             btn.textContent = "Saving...";
             btn.disabled = true;
 
@@ -334,12 +440,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     option.textContent = `${data.vehicle.name} (${data.vehicle.transmission})`;
                     option.selected = true;
                     select.appendChild(option);
+                    
                     vehicleForm.reset();
-                    const modalClose = document.querySelector('[data-modal-hide="add-vehicle-modal"]');
-                    if(modalClose) modalClose.click();
-                } else alert("Error: " + data.error);
+                    // Close modal
+                    const modalCloseBtn = document.querySelector('[data-modal-hide="add-vehicle-modal"]');
+                    if(modalCloseBtn) modalCloseBtn.click();
+                } else {
+                    alert("Error: " + data.error);
+                }
             } catch (err) { console.error(err); } 
-            finally { btn.textContent = "Save Vehicle"; btn.disabled = false; }
+            finally { btn.textContent = originalText; btn.disabled = false; }
         });
     }
 });

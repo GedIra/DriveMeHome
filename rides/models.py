@@ -59,64 +59,47 @@ class Ride(models.Model):
   dropoff_latitude = models.DecimalField(max_digits=9, decimal_places=6)
   dropoff_longitude = models.DecimalField(max_digits=9, decimal_places=6)
   
-  # --- TRIP METRICS (Populated via Maps API) ---
+  # --- TRIP METRICS ---
   distance_km = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
   estimated_duration_min = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
   
   # --- STATUS & TIMESTAMPS ---
   status = models.CharField(max_length=20, choices=RideStatus.choices, default=RideStatus.REQUESTED)
+  
+  # New Field for Scheduling
+  scheduled_for = models.DateTimeField(null=True, blank=True, help_text="If null, it's an immediate booking")
+  
   created_at = models.DateTimeField(auto_now_add=True)
   accepted_at = models.DateTimeField(null=True, blank=True)
   started_at = models.DateTimeField(null=True, blank=True)
   completed_at = models.DateTimeField(null=True, blank=True)
   
-  # --- FINANCIAL SNAPSHOT (Anti-Data Loss) ---
+  # --- FINANCIAL SNAPSHOT ---
   estimated_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
   final_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
   platform_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
   driver_earnings = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
   
-  # Store the pricing rules used for this specific ride (Audit trail)
   applied_base_fare = models.DecimalField(max_digits=6, decimal_places=2, null=True)
   applied_rate_per_km = models.DecimalField(max_digits=6, decimal_places=2, null=True)
   applied_rate_per_min = models.DecimalField(max_digits=6, decimal_places=2, null=True)
 
   def estimate_fare(self):
-    """
-    Calls Google Maps to get distance/time, then calculates price based on Active Config.
-    """
-    # 1. Get Distance & Duration from Utility
-    # Note: Ensure self.pickup_latitude etc are converted to strings/floats if needed by the utility, 
-    # though Decimal usually works fine or can be cast inside the utility.
     metrics = get_distance_and_duration(
-      self.pickup_latitude, 
-      self.pickup_longitude, 
-      self.dropoff_latitude, 
-      self.dropoff_longitude
+      self.pickup_latitude, self.pickup_longitude, 
+      self.dropoff_latitude, self.dropoff_longitude
     )
-    
     if metrics:
       self.distance_km = metrics['distance_km']
       self.estimated_duration_min = metrics['duration_min']
-      
-      # 2. Get Active Pricing
       try:
-        # Use .first() in case multiple are accidentally active
         config = PricingConfiguration.objects.filter(is_active=True).first()
         if config:
-          # 3. Calculate Price
-          # Formula: Base + (Km * Price/Km) + (Min * Price/Min)
-          cost = config.base_fare + \
-                  (self.distance_km * config.price_per_km) + \
-                  (self.estimated_duration_min * config.price_per_minute)
-          
+          cost = config.base_fare + (self.distance_km * config.price_per_km) + (self.estimated_duration_min * config.price_per_minute)
           self.estimated_price = round(cost, 2)
-          
-          # Snapshot the rates used so we know how we got this price
           self.applied_base_fare = config.base_fare
           self.applied_rate_per_km = config.price_per_km
           self.applied_rate_per_min = config.price_per_minute
-          
           self.save()
           return self.estimated_price
       except PricingConfiguration.DoesNotExist:
