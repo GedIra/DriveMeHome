@@ -12,7 +12,7 @@ import threading
 from django.template import loader
 from django.template.loader import render_to_string
 import threading
-from .models import DriverProfile, CustomerProfile
+from .models import DriverProfile, CustomerProfile, PreferredDestination, EmergencyContact
 from django.contrib.auth import authenticate
 
 User = get_user_model()
@@ -295,4 +295,29 @@ class DriverProfileUpdateForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Styling loop
         for field in self.fields.values():
+            field.widget.attrs.update({'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'})
+
+class PreferredDestinationForm(forms.ModelForm):
+    class Meta:
+        model = PreferredDestination
+        fields = ['name', 'address', 'latitude', 'longitude']
+        widgets = {
+            'latitude': forms.HiddenInput(),
+            'longitude': forms.HiddenInput(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if not isinstance(field.widget, forms.HiddenInput):
+                field.widget.attrs.update({'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'})
+
+class EmergencyContactForm(forms.ModelForm):
+    class Meta:
+        model = EmergencyContact
+        fields = ['name', 'phone_number', 'relationship']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
             field.widget.attrs.update({'class': 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'})

@@ -153,6 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- 4. DRIVER SELECTION LOGIC ---
     const btnOpenModal = document.getElementById('btn-open-driver-modal');
     const driverModal = document.getElementById('driver-selection-modal');
+    const driverModalBackdrop = document.getElementById('driver-selection-modal-backdrop');
     const driverListContainer = document.getElementById('driver-list-container');
     const bookingForm = document.getElementById('booking-form');
     const modeInput = document.getElementById('id_driver_selection_mode');
@@ -172,9 +173,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Show Modal
+            // Show Modal & Backdrop
             driverModal.classList.remove('hidden');
             driverModal.classList.add('flex'); // Centered via flex
+            driverModalBackdrop.classList.remove('hidden');
             
             // Fetch Drivers
             fetchDrivers(vehicleId);
@@ -186,6 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', () => {
             driverModal.classList.add('hidden');
             driverModal.classList.remove('flex');
+            driverModalBackdrop.classList.add('hidden');
         });
     });
 
