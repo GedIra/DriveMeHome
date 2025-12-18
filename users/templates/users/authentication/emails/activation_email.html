@@ -22,12 +22,12 @@
       <p>Thank you for registering. To start using your account, please confirm your email address by clicking the button below:</p>
       
       <div style="text-align: center; margin: 30px 0;">
-        <a href="{{ protocol }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}" class="button" style="color: #ffffff;">Activate Account</a>
+        <a href="{{ protocol }}://{{ domain }}{% url 'users:activate' uidb64=uid token=token %}" class="button" style="color: #ffffff;">Activate Account</a>
       </div>
       
       <p>Or copy and paste this link into your browser:</p>
       <p class="link-text">
-        {{ protocol }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}
+        {{ protocol }}://{{ domain }}{% url 'users:activate' uidb64=uid token=token %}
       </p>
     </div>
     <div class="footer">

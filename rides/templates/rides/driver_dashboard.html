@@ -245,7 +245,7 @@
 <script>
     window.mapboxAccessToken = "{{ mapbox_access_token }}";
     window.csrfToken = "{{ csrf_token }}";
-    window.updateLocationUrl = "{% url 'api_update_location' %}";
+    window.updateLocationUrl = "{% url 'rides:api_update_location' %}";
     window.acceptRideBaseUrl = "/rides/api/driver/accept/"; 
     window.rideDetailsBaseUrl = "/rides/api/ride/details/";
     window.updateRideStatusBaseUrl = "/rides/api/ride/status/";

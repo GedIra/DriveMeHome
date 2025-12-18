@@ -31,12 +31,12 @@
                         </a>
 
                         <li class="space-x-6 text-lg font-normal text-neutral-600">
-                            <a href="#">How It Works</a>
-                            <a href="#">Safety</a>
-                            <a href="#">Pricing</a>
+                            <a href="{% url 'users:landing' %}#how-it-works" class="nav-link">How It Works</a>
+                            <a href="{% url 'users:landing' %}#safety" class="nav-link">Safety</a>
+                            <a href="{% url 'users:landing' %}#pricing" class="nav-link">Pricing</a>
                             <a href="#">Support</a>
-                            <a href="#" class="font-medium text-primary">Sign up</a>
-                            <a href="#" class="font-medium text-primary">Log In</a>
+                            <a href="{% url 'users:register' %}" class="font-medium text-primary">Sign up</a>
+                            <a href="{% url 'users:login' %}" class="font-medium text-primary">Log In</a>
                         </li>
                     </ul>
                 </div>
@@ -55,6 +55,19 @@
             {% endblock %}
         </nav>
     </header>
+
+    <div class="bg-white/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex flex-wrap gap-3 items-center text-sm">
+                <a href="/" class="text-gray-600 hover:text-primary">Home</a>
+                <a href="/users/login/" class="text-gray-600 hover:text-primary">Login</a>
+                <a href="/users/register/" class="text-gray-600 hover:text-primary">Register</a>
+                <a href="/rides/driver/dashboard/" class="text-gray-600 hover:text-primary">Driver Dashboard</a>
+                <a href="/rides/book/" class="text-gray-600 hover:text-primary">Book Ride</a>
+                <a href="/admin/" class="text-gray-600 hover:text-primary">Admin</a>
+            </div>
+        </div>
+    </div>
 
     <main>
         {% block content %}
@@ -87,8 +100,8 @@
                         <div class="grid space-y-1.5">
                             <p class="font-semibold text-white text-lg">Company</p>
                             <a href="#">About Us</a>
-                            <a href="#">How It Works</a>
-                            <a href="#">Safety</a>
+                            <a href="{% url 'users:landing' %}#how-it-works" class="nav-link">How It Works</a>
+                            <a href="{% url 'users:landing' %}#safety" class="nav-link">Safety</a>
                             <a href="#">Careers</a>
                             <a href="#">Press</a>
                         </div>
@@ -107,7 +120,7 @@
                             <a href="#">Privacy Policy</a>
                             <a href="#">Terms of Service</a>
                             <a href="#">Driver Agreement</a>
-                            <a href="#">Admin Login</a>
+                            <a href="/admin">Admin Login</a>
                         </div>
 
                     </div>
@@ -129,7 +142,23 @@
     
     <!-- JavaScript files -->
     {% block scripts %}
-    <!-- <script src="{% static 'js/main.js' %}"></script> -->
+    <script>
+        document.querySelectorAll('.nav-link').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const targetId = this.getAttribute('href').split('#')[1];
+                const targetElement = document.getElementById(targetId);
+
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
     {% endblock %}
 </body>
 </html>

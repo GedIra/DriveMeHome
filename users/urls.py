@@ -18,6 +18,8 @@ from .views import (
 )
 from .forms import CustomPasswordResetForm, CustomSetPasswordForm
 
+app_name = 'users'
+
 urlpatterns = [
     # Authentication
     path('', landing_view, name='landing'),

@@ -313,9 +313,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/3.1.2/mapbox-gl.js" xintegrity="sha512-CXG5vBw2QN9i5lXmqX2+F4XN844F4194464+26353134" crossorigin="anonymous" onerror="alert('Failed to load Mapbox. Please check your internet connection.')"></script>
 <script>
     window.mapboxAccessToken = "{{ mapbox_access_token }}";
-    window.estimateUrl = "{% url 'api_estimate_ride' %}";
-    window.addVehicleUrl = "{% url 'api_add_vehicle' %}";
-    window.getDriversUrl = "{% url 'api_get_drivers' %}";
+    window.estimateUrl = "{% url 'rides:api_estimate_ride' %}";
+    window.addVehicleUrl = "{% url 'rides:api_add_vehicle' %}";
+    window.getDriversUrl = "{% url 'rides:api_get_drivers' %}";
 </script>
 <script src="{% static 'js/ride_booking.js' %}?v={% now 'U' %}"></script>
 {% endblock %}
