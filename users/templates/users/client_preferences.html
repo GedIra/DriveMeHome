@@ -52,6 +52,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <!-- Edit Button -->
+                        <!-- Pass the FULL URL for editing -->
                         <button type="button" 
                             onclick="openDestModal('{{ dest.id }}', '{{ dest.name|escapejs }}', '{{ dest.address|escapejs }}', '{{ dest.latitude }}', '{{ dest.longitude }}', '{% url 'edit_destination' dest.id %}')" 
                             class="text-gray-400 hover:text-blue-600 p-1">
