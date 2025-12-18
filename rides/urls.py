@@ -17,4 +17,5 @@ urlpatterns = [
     path('api/driver/accept/<int:ride_id>/', views.accept_ride_api, name='api_accept_ride'),
     path('api/driver/location/update/', views.update_driver_location_api, name='api_update_location'),
     path('api/ride/details/<int:ride_id>/', views.get_ride_details_api, name='api_ride_details'),
+    path('api/ride/status/<int:ride_id>/', views.update_ride_status_api, name='api_update_ride_status'),
 ]

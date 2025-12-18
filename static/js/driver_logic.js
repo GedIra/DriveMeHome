@@ -77,7 +77,58 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = await res.json();
         
         if(data.success) {
-            initTrackingMap(data.ride);
+            // Populate overlay details
+            const ride = data.ride;
+            const clientNameEl = document.getElementById('track-client-name');
+            if (clientNameEl) clientNameEl.textContent = ride.customer_name || '--';
+            const phoneEl = document.getElementById('track-phone');
+            if (phoneEl) phoneEl.textContent = ride.customer_phone || (ride.customer && ride.customer.user && ride.customer.user.phone_number) || '--';
+            const earningEl = document.getElementById('track-earning');
+            if (earningEl) earningEl.textContent = 'RWF ' + (ride.est_earning || '--');
+            const pickupEl = document.getElementById('track-pickup');
+            if (pickupEl) pickupEl.textContent = ride.pickup || '--';
+            const dropoffEl = document.getElementById('track-dropoff');
+            if (dropoffEl) dropoffEl.textContent = ride.dropoff || '--';
+            const rideIdEl = document.getElementById('track-ride-id');
+            if (rideIdEl) rideIdEl.textContent = ride.id || '--';
+            const statusEl = document.getElementById('track-status');
+            if (statusEl) {
+                const statusText = ride.status || '--';
+                statusEl.textContent = statusText;
+                // adjust badge color
+                statusEl.className = 'inline-block text-xs font-semibold px-2.5 py-0.5 rounded';
+                if (statusText === 'ASSIGNED') statusEl.classList.add('bg-blue-100','text-blue-800');
+                else if (statusText === 'ARRIVED') statusEl.classList.add('bg-yellow-100','text-yellow-800');
+                else if (statusText === 'IN_PROGRESS') statusEl.classList.add('bg-green-100','text-green-800');
+                else if (statusText === 'COMPLETED') statusEl.classList.add('bg-gray-200','text-gray-800');
+                else statusEl.classList.add('bg-gray-100','text-gray-800');
+            }
+
+            // avatar
+            const avatarEl = document.getElementById('track-modal-avatar');
+            if (avatarEl) {
+                if (ride.customer_avatar) avatarEl.innerHTML = `<img src="${ride.customer_avatar}" class="w-full h-full object-cover">`;
+                else avatarEl.textContent = (ride.customer_name || '?').slice(0,1).toUpperCase();
+            }
+
+            initTrackingMap(ride);
+            // set current ride id and update action button
+            currentRideId = ride.id || rideId;
+            updateActionButton(ride.status);
+            // start polling ride details while modal open
+            if (trackingInterval) clearInterval(trackingInterval);
+            trackingInterval = setInterval(async () => {
+                try {
+                    const r = await fetch(`${window.rideDetailsBaseUrl}${currentRideId}/`);
+                    const d = await r.json();
+                    if (d.success && d.ride) {
+                        if (d.ride.status && d.ride.status !== ride.status) {
+                            ride.status = d.ride.status;
+                            updateActionButton(d.ride.status);
+                        }
+                    }
+                } catch(e) { console.error('poll ride details', e); }
+            }, 8000);
         }
     };
 
@@ -85,7 +136,77 @@ document.addEventListener('DOMContentLoaded', function() {
         trackingModal.classList.add('hidden');
         trackingModal.classList.remove('flex');
         // Stop polling specific to this modal if any
+        if (trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
+        currentRideId = null;
     };
+
+    function updateActionButton(status) {
+        const btn = document.getElementById('btn-ride-action');
+        const text = btn;
+        if (!btn) return;
+        btn.disabled = false;
+
+        // Normalize status names used in backend
+        switch(status) {
+            case 'ASSIGNED':
+            case 'DRIVER_ASSIGNED':
+            case 'REQUESTED':
+                btn.textContent = 'I Have Arrived';
+                btn.onclick = () => updateRideStatus('ARRIVED');
+                btn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-md text-sm';
+                break;
+            case 'ARRIVED':
+            case 'DRIVER_ARRIVED':
+                btn.textContent = 'Start Ride';
+                btn.onclick = () => updateRideStatus('IN_PROGRESS');
+                btn.className = 'w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 rounded-md text-sm';
+                break;
+            case 'IN_PROGRESS':
+                btn.textContent = 'End Ride';
+                btn.onclick = () => updateRideStatus('COMPLETED');
+                btn.className = 'w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-md text-sm';
+                break;
+            case 'COMPLETED':
+                btn.textContent = 'Ride Completed';
+                btn.disabled = true;
+                btn.className = 'w-full bg-gray-300 text-gray-700 font-bold py-2 rounded-md text-sm';
+                break;
+            default:
+                btn.textContent = 'Update Status';
+                btn.onclick = () => {};
+                btn.className = 'w-full bg-gray-600 text-white font-bold py-2 rounded-md text-sm';
+        }
+    }
+
+    async function updateRideStatus(newStatus) {
+        if (!currentRideId) return alert('No ride selected');
+        const btn = document.getElementById('btn-ride-action');
+        if (btn) { btn.disabled = true; btn.textContent = 'Updating...'; }
+        try {
+            const res = await fetch(`${window.updateRideStatusBaseUrl}${currentRideId}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': window.csrfToken, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+            const data = await res.json();
+            if (data.success) {
+                // reflect new status locally and update UI
+                updateActionButton(newStatus);
+                // also update status badge
+                const statusEl = document.getElementById('track-status');
+                if (statusEl) {
+                    statusEl.textContent = newStatus;
+                }
+            } else {
+                alert('Status update failed: ' + (data.error || 'unknown'));
+                if (btn) btn.disabled = false;
+            }
+        } catch(e) {
+            console.error('update status', e);
+            alert('Could not update status');
+            if (btn) btn.disabled = false;
+        }
+    }
 
     function initTrackingMap(ride) {
         if (!trackingMap) {
@@ -135,58 +256,78 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function drawTrackingRoute(driverLng, driverLat, ride) {
-        // Construct waypoints: Driver -> Pickup -> Dropoff
-        const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${driverLng},${driverLat};${ride.pickup_lng},${ride.pickup_lat};${ride.dropoff_lng},${ride.dropoff_lat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
-        
+        // Draw two legs: driver -> pickup (blue) and pickup -> dropoff (green)
+        if (!driverLng || !driverLat || !ride.pickup_lng || !ride.pickup_lat) return;
+
+        const legAUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${driverLng},${driverLat};${ride.pickup_lng},${ride.pickup_lat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
+        const legBUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${ride.pickup_lng},${ride.pickup_lat};${ride.dropoff_lng},${ride.dropoff_lat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
+
         try {
-            const res = await fetch(url);
-            const data = await res.json();
-            if (data.routes && data.routes[0]) {
-                const route = data.routes[0].geometry;
-                
-                // Update source
-                if (trackingMap.getSource('track-route')) {
-                    trackingMap.getSource('track-route').setData({
-                        'type': 'Feature', 'properties': {}, 'geometry': route
-                    });
+            // Leg A: driver -> pickup (blue)
+            const resA = await fetch(legAUrl);
+            const dataA = await resA.json();
+            if (dataA.routes && dataA.routes[0]) {
+                const routeA = dataA.routes[0].geometry;
+                if (trackingMap.getSource('track-route-1')) {
+                    trackingMap.getSource('track-route-1').setData({ 'type': 'Feature', 'properties': {}, 'geometry': routeA });
                 } else {
-                    trackingMap.addSource('track-route', {
-                        'type': 'geojson',
-                        'data': { 'type': 'Feature', 'properties': {}, 'geometry': route }
-                    });
-                    trackingMap.addLayer({
-                        'id': 'track-route',
-                        'type': 'line',
-                        'source': 'track-route',
-                        'layout': { 'line-join': 'round', 'line-cap': 'round' },
-                        'paint': { 'line-color': '#3b82f6', 'line-width': 5 }
-                    });
+                    trackingMap.addSource('track-route-1', { 'type': 'geojson', 'data': { 'type': 'Feature', 'properties': {}, 'geometry': routeA } });
+                    trackingMap.addLayer({ 'id': 'track-route-1', 'type': 'line', 'source': 'track-route-1', 'layout': { 'line-join': 'round', 'line-cap': 'round' }, 'paint': { 'line-color': '#3b82f6', 'line-width': 5 } });
                 }
-                
-                // Update Info Stats
-                const duration = Math.round(data.routes[0].duration / 60);
-                const distance = (data.routes[0].distance / 1000).toFixed(1);
-                document.getElementById('track-dist').textContent = distance;
-                document.getElementById('track-time').textContent = duration;
             }
-        } catch(e) { console.error(e); }
+
+            // Leg B: pickup -> dropoff (green)
+            const resB = await fetch(legBUrl);
+            const dataB = await resB.json();
+            if (dataB.routes && dataB.routes[0]) {
+                const routeB = dataB.routes[0].geometry;
+                if (trackingMap.getSource('track-route-2')) {
+                    trackingMap.getSource('track-route-2').setData({ 'type': 'Feature', 'properties': {}, 'geometry': routeB });
+                } else {
+                    trackingMap.addSource('track-route-2', { 'type': 'geojson', 'data': { 'type': 'Feature', 'properties': {}, 'geometry': routeB } });
+                    trackingMap.addLayer({ 'id': 'track-route-2', 'type': 'line', 'source': 'track-route-2', 'layout': { 'line-join': 'round', 'line-cap': 'round' }, 'paint': { 'line-color': '#10b981', 'line-width': 5 } });
+                }
+            }
+
+            // Update Info Stats using combined duration/distance if available (sum of legs)
+            let totalDuration = 0, totalDistance = 0;
+            if (dataA.routes && dataA.routes[0]) {
+                totalDuration += dataA.routes[0].duration;
+                totalDistance += dataA.routes[0].distance;
+            }
+            if (dataB.routes && dataB.routes[0]) {
+                totalDuration += dataB.routes[0].duration;
+                totalDistance += dataB.routes[0].distance;
+            }
+            if (totalDuration && totalDistance) {
+                const duration = Math.round(totalDuration / 60);
+                const distance = (totalDistance / 1000).toFixed(1);
+                const distEl = document.getElementById('track-dist');
+                const timeEl = document.getElementById('track-time');
+                if (distEl) distEl.textContent = distance;
+                if (timeEl) timeEl.textContent = duration;
+            }
+
+        } catch (e) { console.error('drawTrackingRoute error', e); }
     }
 
     // --- 4. SHARED HELPERS ---
     async function drawStaticRoute(mapInstance, ride) {
         const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${ride.pickup_lng},${ride.pickup_lat};${ride.dropoff_lng},${ride.dropoff_lat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.routes && data.routes[0]) {
-            const route = data.routes[0].geometry;
-            const srcId = 'static-route';
-            if (mapInstance.getSource(srcId)) {
-                mapInstance.getSource(srcId).setData({ 'type': 'Feature', 'properties': {}, 'geometry': route });
-            } else {
-                mapInstance.addSource(srcId, { 'type': 'geojson', 'data': { 'type': 'Feature', 'properties': {}, 'geometry': route } });
-                mapInstance.addLayer({ 'id': srcId, 'type': 'line', 'source': srcId, 'layout': {'line-join': 'round'}, 'paint': { 'line-color': '#888', 'line-width': 4 } });
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.routes && data.routes[0]) {
+                const route = data.routes[0].geometry;
+                const srcId = 'static-route';
+                if (mapInstance.getSource(srcId)) {
+                    mapInstance.getSource(srcId).setData({ 'type': 'Feature', 'properties': {}, 'geometry': route });
+                } else {
+                    mapInstance.addSource(srcId, { 'type': 'geojson', 'data': { 'type': 'Feature', 'properties': {}, 'geometry': route } });
+                    mapInstance.addLayer({ 'id': srcId, 'type': 'line', 'source': srcId, 'layout': {'line-join': 'round'}, 'paint': { 'line-color': '#10b981', 'line-width': 4 } });
+                }
             }
-        }
+        } catch (e) { console.error('drawStaticRoute error', e); }
     }
 
     // Accept Ride Event

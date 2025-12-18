@@ -67,46 +67,51 @@ def book_ride_view(request):
             ride.estimate_fare() 
             
             # 4. Handle Driver Assignment
-            if driver_selection_mode == 'auto':
-                # Auto Assign Logic
-                qualified_drivers = DriverProfile.objects.filter(
-                    is_verified=True,
-                    license_score__gte=vehicle.required_license_score
-                ).exclude(current_status=DriverProfile.DriverStatus.OFFLINE)
+            with transaction.atomic():
+                driver_to_assign = None
+                if driver_selection_mode == 'auto':
+                    # Auto Assign Logic
+                    qualified_drivers = DriverProfile.objects.filter(
+                        is_verified=True,
+                        license_score__gte=vehicle.required_license_score
+                    ).exclude(current_status=DriverProfile.DriverStatus.OFFLINE)
 
-                if vehicle.transmission_type == 'MANUAL':
-                    qualified_drivers = qualified_drivers.filter(transmission_capability='BOTH')
+                    if vehicle.transmission_type == 'MANUAL':
+                        qualified_drivers = qualified_drivers.filter(transmission_capability='BOTH')
 
-                # Prefer AVAILABLE, then BUSY
-                # Sort: 0 for AVAILABLE, 1 for BUSY. Negative rating for desc sort.
-                best_driver = sorted(
-                    qualified_drivers, 
-                    key=lambda d: (0 if d.current_status == DriverProfile.DriverStatus.AVAILABLE else 1, -d.average_rating)
-                )
+                    best_driver_list = sorted(
+                        qualified_drivers, 
+                        key=lambda d: (0 if d.current_status == DriverProfile.DriverStatus.AVAILABLE else 1, -d.average_rating)
+                    )
+                    if best_driver_list:
+                        driver_to_assign = best_driver_list[0]
+                
+                else:
+                    # Manual Selection (driver_id passed)
+                    try:
+                        driver_to_assign = DriverProfile.objects.get(id=driver_selection_mode)
+                    except DriverProfile.DoesNotExist:
+                        pass # Handled below
 
-                if best_driver:
-                    ride.driver = best_driver[0]
+                # Assign driver and update statuses
+                if driver_to_assign:
+                    ride.driver = driver_to_assign
                     ride.status = Ride.RideStatus.DRIVER_ASSIGNED
-                    if best_driver[0].current_status == DriverProfile.DriverStatus.BUSY:
+                    
+                    if driver_to_assign.current_status == DriverProfile.DriverStatus.BUSY:
                         messages.warning(request, f"Ride booked! Driver {ride.driver.user.username} is currently busy but will come to you next.")
                     else:
+                        driver_to_assign.current_status = DriverProfile.DriverStatus.BUSY
+                        driver_to_assign.save()
                         messages.success(request, f"Ride booked! Driver {ride.driver.user.username} is on the way.")
                 else:
                     ride.status = Ride.RideStatus.REQUESTED
-                    messages.info(request, "Ride requested. We are searching for a driver for you.")
-            
-            else:
-                # Manual Selection (driver_id passed)
-                try:
-                    driver = DriverProfile.objects.get(id=driver_selection_mode)
-                    ride.driver = driver
-                    ride.status = Ride.RideStatus.DRIVER_ASSIGNED
-                    messages.success(request, f"Ride booked with {driver.user.username}!")
-                except DriverProfile.DoesNotExist:
-                    ride.status = Ride.RideStatus.REQUESTED
-                    messages.warning(request, "Selected driver not found. Request broadcasted to all.")
+                    if driver_selection_mode != 'auto':
+                         messages.warning(request, "Selected driver not found. Request broadcasted to all.")
+                    else:
+                        messages.info(request, "Ride requested. We are searching for a driver for you.")
 
-            ride.save()
+                ride.save()
             
             # Redirect to avoid resubmission. Ideally to a 'ride_detail' page.
             return redirect('book_ride')
@@ -486,3 +491,51 @@ def get_ride_details_api(request, ride_id):
         'status': ride.status,
     }
     return JsonResponse({'success': True, 'ride': data})
+
+@login_required
+@require_POST
+@transaction.atomic
+def update_ride_status_api(request, ride_id):
+    """
+    API for a driver to update the status of a ride they are assigned to.
+    e.g., ARRIVED, IN_PROGRESS, COMPLETED
+    """
+    try:
+        driver = request.user.driver_profile
+        ride = get_object_or_404(Ride, id=ride_id, driver=driver)
+        data = json.loads(request.body)
+        new_status = data.get('status')
+
+        if not new_status:
+            return JsonResponse({'success': False, 'error': 'New status not provided'}, status=400)
+
+        valid_statuses = [c[0] for c in Ride.RideStatus.choices]
+        if new_status not in valid_statuses:
+            return JsonResponse({'success': False, 'error': f'Invalid status: {new_status}'}, status=400)
+
+        ride.status = new_status
+        
+        if new_status == Ride.RideStatus.IN_PROGRESS:
+            ride.started_at = timezone.now()
+        elif new_status == Ride.RideStatus.COMPLETED:
+            ride.completed_at = timezone.now()
+            # When ride is completed, driver becomes available again
+            # But only if they don't have another ride queued up
+            other_rides = Ride.objects.filter(
+                driver=driver,
+                status__in=[Ride.RideStatus.DRIVER_ASSIGNED, Ride.RideStatus.DRIVER_ARRIVED]
+            ).exists()
+            if not other_rides:
+                driver.current_status = DriverProfile.DriverStatus.AVAILABLE
+                driver.save()
+
+        ride.save()
+
+        return JsonResponse({'success': True, 'new_status': ride.status, 'ride_id': ride.id})
+
+    except DriverProfile.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Driver profile not found.'}, status=403)
+    except Ride.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Ride not found or you are not assigned to it.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
