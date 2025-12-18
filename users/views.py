@@ -14,15 +14,15 @@ from django.core.mail import EmailMultiAlternatives
 from .tokens import account_activation_token
 from django.conf import settings
 from .forms import (
-    CustomLoginForm, 
-    CustomUserCreationForm, 
-    EmailThread, 
-    DriverProfileForm, 
-    CustomerProfileForm,
-    DriverApplicationForm
+    CustomLoginForm, CustomUserCreationForm, 
+    EmailThread, DriverProfileForm, 
+    CustomerProfileForm,DriverApplicationForm,
+    CustomerProfileForm, SensitiveDataUpdateForm, 
+    DriverProfileUpdateForm,DriverSensitiveUpdateForm,
+    PreferredDestinationForm, EmergencyContactForm
 )
 from .tokens import account_activation_token
-from .models import DriverProfile, CustomerProfile
+from .models import DriverProfile, CustomerProfile, PreferredDestination, EmergencyContact
 from django.contrib.auth.decorators import login_required
 
 User = get_user_model()
@@ -164,6 +164,8 @@ def profile_view(request):
                 form.save()
                 messages.success(request, 'Driver profile updated successfully!')
                 return redirect('profile')
+            else:
+                messages.error(request, 'Failed to update driver profile. Please correct the errors below.')
         else:
             form = DriverProfileForm(instance=profile)
 
@@ -177,6 +179,8 @@ def profile_view(request):
                 form.save()
                 messages.success(request, 'Profile updated successfully!')
                 return redirect('profile')
+            else:
+                messages.error(request, 'Failed to update profile. Please correct the errors below.')
         else:
             form = CustomerProfileForm(instance=profile)
     
@@ -208,6 +212,8 @@ def driver_application_view(request):
             form.save()
             messages.success(request, 'Application submitted successfully! Your documents are under review.')
             return redirect('profile') # Or redirect to a 'status' page
+        else:
+            messages.error(request, 'Failed to submit application. Please correct the errors below.')
     else:
         form = DriverApplicationForm(instance=profile)
 
@@ -220,3 +226,189 @@ def driver_application_view(request):
 # ... (Existing simple views like activation_sent_view if present) ...
 def activation_sent_view(request):
     return render(request, 'users/activation_sent.html')
+
+@login_required
+def customer_profile_settings_view(request):
+    user = request.user
+    if not user.is_customer:
+        return redirect('profile')
+
+    profile = user.customer_profile
+    
+    # 1. Profile Data Form (Non-sensitive)
+    profile_form = CustomerProfileForm(request.POST or None, request.FILES or None, instance=profile)
+    
+    # 2. Sensitive Data Form (User model)
+    sensitive_form = SensitiveDataUpdateForm(user, request.POST or None, instance=user)
+
+    if request.method == 'POST':
+        # Determine which form was submitted based on a hidden field or button name
+        if 'update_profile' in request.POST:
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(request, "Profile picture updated.")
+                return redirect('customer_settings')
+            else:
+                messages.error(request, "Failed to update profile picture. Please correct the errors below.")
+            
+        if 'update_sensitive' in request.POST:
+            if sensitive_form.is_valid():
+                sensitive_form.save()
+                messages.success(request, "Account details updated successfully.")
+                return redirect('customer_settings')
+            else:
+                messages.error(request, "Failed to update account details. Check password.")
+
+    context = {
+        'profile_form': profile_form,
+        'sensitive_form': sensitive_form,
+        'page_title': 'Account Settings'
+    }
+    return render(request, 'users/customer_settings.html', context)
+
+@login_required
+def driver_profile_settings_view(request):
+    user = request.user
+    if not user.is_driver:
+        return redirect('profile')
+
+    profile = user.driver_profile
+    
+    # Forms
+    doc_form = DriverProfileUpdateForm(request.POST or None, request.FILES or None, instance=profile)
+    sensitive_form = DriverSensitiveUpdateForm(user, request.POST or None, instance=user)
+
+    if request.method == 'POST':
+        if 'update_docs' in request.POST:
+            if doc_form.is_valid():
+                driver = doc_form.save(commit=False)
+                # LOGIC: Changing license details revokes verification
+                if 'license_number' in doc_form.changed_data or 'driving_license_file' in doc_form.changed_data:
+                    driver.is_verified = False
+                    messages.warning(request, "License details changed. Your account is pending re-verification.")
+                driver.save()
+                messages.success(request, "Documents updated.")
+                return redirect('driver_settings')
+            else:
+                messages.error(request, "Failed to update documents. Please correct the errors below.")
+
+        if 'update_sensitive' in request.POST:
+            if sensitive_form.is_valid():
+                sensitive_form.save()
+                messages.success(request, "Contact info updated.")
+                return redirect('driver_settings')
+            else:
+                messages.error(request, "Failed to update contact info. Please correct the errors below.")
+
+    context = {
+        'doc_form': doc_form,
+        'sensitive_form': sensitive_form,
+        'page_title': 'Driver Settings'
+    }
+    return render(request, 'users/driver_settings.html', context)
+
+@login_required
+def client_preferences_view(request):
+    """
+    Lists Preferred Destinations and Emergency Contacts.
+    Passes Mapbox token for the Add/Edit modal map.
+    """
+    user = request.user
+    if not user.is_customer or not hasattr(user, 'customer_profile'):
+        return redirect('profile')
+    
+    profile = user.customer_profile
+    destinations = profile.preferred_destinations.all()
+    contacts = profile.emergency_contacts.all()
+    
+    # Initialize empty forms for the 'Add' modals
+    dest_form = PreferredDestinationForm()
+    contact_form = EmergencyContactForm()
+
+    context = {
+        'destinations': destinations,
+        'contacts': contacts,
+        'dest_form': dest_form,
+        'contact_form': contact_form,
+        'mapbox_access_token': settings.MAPBOX_ACCESS_TOKEN, # Crucial for modal map
+        'page_title': 'My Preferences'
+    }
+    return render(request, 'users/client_preferences.html', context)
+
+@login_required
+def add_destination_view(request):
+    if request.method == 'POST':
+        profile = request.user.customer_profile
+        form = PreferredDestinationForm(request.POST)
+        if form.is_valid():
+            dest = form.save(commit=False)
+            dest.customer = profile
+            dest.save()
+            messages.success(request, "Destination added.")
+        else:
+            # In a real app, you might want to return errors to the modal.
+            # For MVP, a simple error message suffices.
+            messages.error(request, "Error adding destination. Please check inputs.")
+    return redirect('client_preferences')
+
+@login_required
+def edit_destination_view(request, pk):
+    """
+    Handles updating an existing destination via POST.
+    """
+    dest = get_object_or_404(PreferredDestination, pk=pk, customer__user=request.user)
+    
+    if request.method == 'POST':
+        form = PreferredDestinationForm(request.POST, instance=dest)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Destination updated.")
+        else:
+            messages.error(request, "Error updating destination.")
+            
+    return redirect('client_preferences')
+
+@login_required
+def delete_destination_view(request, pk):
+    dest = get_object_or_404(PreferredDestination, pk=pk, customer__user=request.user)
+    dest.delete()
+    messages.success(request, "Destination removed.")
+    return redirect('client_preferences')
+
+@login_required
+def add_emergency_contact_view(request):
+    if request.method == 'POST':
+        profile = request.user.customer_profile
+        form = EmergencyContactForm(request.POST)
+        if form.is_valid():
+            contact = form.save(commit=False)
+            contact.customer = profile
+            contact.save()
+            messages.success(request, "Emergency contact added.")
+        else:
+            messages.error(request, "Error adding contact.")
+    return redirect('client_preferences')
+
+@login_required
+def edit_emergency_contact_view(request, pk):
+    """
+    Handles updating an existing contact via POST.
+    """
+    contact = get_object_or_404(EmergencyContact, pk=pk, customer__user=request.user)
+    
+    if request.method == 'POST':
+        form = EmergencyContactForm(request.POST, instance=contact)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Contact updated.")
+        else:
+            messages.error(request, "Error updating contact.")
+            
+    return redirect('client_preferences')
+
+@login_required
+def delete_emergency_contact_view(request, pk):
+    contact = get_object_or_404(EmergencyContact, pk=pk, customer__user=request.user)
+    contact.delete()
+    messages.success(request, "Contact removed.")
+    return redirect('client_preferences')

@@ -51,3 +51,9 @@
   stroke: #ffc107;
   cursor: pointer; 
 }
+
+/* --- GLOBAL MODAL BACKDROP STYLE --- */
+[data-modal-backdrop] {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
