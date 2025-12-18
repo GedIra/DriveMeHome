@@ -76,7 +76,7 @@ def check_phone_existence(request):
 class RegisterView(CreateView):
   form_class = CustomUserCreationForm
   template_name = 'users/authentication/register.html'
-  success_url = reverse_lazy('login')
+  success_url = reverse_lazy('users:login')
 
   def form_valid(self, form):
     # 1. Create the user object but DO NOT save to DB yet
@@ -110,7 +110,7 @@ class RegisterView(CreateView):
     EmailThread(email).start()
 
     # 6. Redirect to the "Check your email" page
-    return redirect('activation_sent')
+    return redirect('users:activation_sent')
 
   def form_invalid(self, form):
     messages.error(self.request, "Registration failed. Please correct the errors below.")
@@ -130,11 +130,11 @@ class ActivateAccountView(View):
       user.is_active = True
       user.save()
       messages.success(request, 'Your account has been activated successfully! You can now log in.')
-      return redirect('login')
+      return redirect('users:login')
     else:
       # Token invalid or expired
       messages.error(request, 'Activation link is invalid or has expired!')
-      return redirect('login')
+      return redirect('users:login')
 
 # --- EMAIL SENT PAGE  VIEW---
 def activation_sent_view(request):
@@ -163,7 +163,7 @@ def profile_view(request):
             if form.is_valid():
                 form.save()
                 messages.success(request, 'Driver profile updated successfully!')
-                return redirect('profile')
+                return redirect('users:profile')
             else:
                 messages.error(request, 'Failed to update driver profile. Please correct the errors below.')
         else:
@@ -178,7 +178,7 @@ def profile_view(request):
             if form.is_valid():
                 form.save()
                 messages.success(request, 'Profile updated successfully!')
-                return redirect('profile')
+                return redirect('users:profile')
             else:
                 messages.error(request, 'Failed to update profile. Please correct the errors below.')
         else:
@@ -202,7 +202,7 @@ def driver_application_view(request):
     
     if not user.is_driver:
         messages.error(request, "Only drivers can access the verification application.")
-        return redirect('profile')
+        return redirect('users:profile')
 
     profile, created = DriverProfile.objects.get_or_create(user=user)
 
@@ -211,7 +211,7 @@ def driver_application_view(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Application submitted successfully! Your documents are under review.')
-            return redirect('profile') # Or redirect to a 'status' page
+            return redirect('users:profile') # Or redirect to a 'status' page
         else:
             messages.error(request, 'Failed to submit application. Please correct the errors below.')
     else:
@@ -231,7 +231,7 @@ def activation_sent_view(request):
 def customer_profile_settings_view(request):
     user = request.user
     if not user.is_customer:
-        return redirect('profile')
+        return redirect('users:profile')
 
     profile = user.customer_profile
     
@@ -247,7 +247,7 @@ def customer_profile_settings_view(request):
             if profile_form.is_valid():
                 profile_form.save()
                 messages.success(request, "Profile picture updated.")
-                return redirect('customer_settings')
+                return redirect('users:customer_settings')
             else:
                 messages.error(request, "Failed to update profile picture. Please correct the errors below.")
             
@@ -255,7 +255,7 @@ def customer_profile_settings_view(request):
             if sensitive_form.is_valid():
                 sensitive_form.save()
                 messages.success(request, "Account details updated successfully.")
-                return redirect('customer_settings')
+                return redirect('users:customer_settings')
             else:
                 messages.error(request, "Failed to update account details. Check password.")
 
@@ -270,7 +270,7 @@ def customer_profile_settings_view(request):
 def driver_profile_settings_view(request):
     user = request.user
     if not user.is_driver:
-        return redirect('profile')
+        return redirect('users:profile')
 
     profile = user.driver_profile
     
@@ -288,7 +288,7 @@ def driver_profile_settings_view(request):
                     messages.warning(request, "License details changed. Your account is pending re-verification.")
                 driver.save()
                 messages.success(request, "Documents updated.")
-                return redirect('driver_settings')
+                return redirect('users:driver_settings')
             else:
                 messages.error(request, "Failed to update documents. Please correct the errors below.")
 
@@ -296,7 +296,7 @@ def driver_profile_settings_view(request):
             if sensitive_form.is_valid():
                 sensitive_form.save()
                 messages.success(request, "Contact info updated.")
-                return redirect('driver_settings')
+                return redirect('users:driver_settings')
             else:
                 messages.error(request, "Failed to update contact info. Please correct the errors below.")
 
@@ -315,7 +315,7 @@ def client_preferences_view(request):
     """
     user = request.user
     if not user.is_customer or not hasattr(user, 'customer_profile'):
-        return redirect('profile')
+        return redirect('users:profile')
     
     profile = user.customer_profile
     destinations = profile.preferred_destinations.all()
@@ -349,7 +349,7 @@ def add_destination_view(request):
             # In a real app, you might want to return errors to the modal.
             # For MVP, a simple error message suffices.
             messages.error(request, "Error adding destination. Please check inputs.")
-    return redirect('client_preferences')
+    return redirect('users:client_preferences')
 
 @login_required
 def edit_destination_view(request, pk):
@@ -366,14 +366,14 @@ def edit_destination_view(request, pk):
         else:
             messages.error(request, "Error updating destination.")
             
-    return redirect('client_preferences')
+    return redirect('users:client_preferences')
 
 @login_required
 def delete_destination_view(request, pk):
     dest = get_object_or_404(PreferredDestination, pk=pk, customer__user=request.user)
     dest.delete()
     messages.success(request, "Destination removed.")
-    return redirect('client_preferences')
+    return redirect('users:client_preferences')
 
 @login_required
 def add_emergency_contact_view(request):
@@ -387,7 +387,7 @@ def add_emergency_contact_view(request):
             messages.success(request, "Emergency contact added.")
         else:
             messages.error(request, "Error adding contact.")
-    return redirect('client_preferences')
+    return redirect('users:client_preferences')
 
 @login_required
 def edit_emergency_contact_view(request, pk):
@@ -404,11 +404,11 @@ def edit_emergency_contact_view(request, pk):
         else:
             messages.error(request, "Error updating contact.")
             
-    return redirect('client_preferences')
+    return redirect('users:client_preferences')
 
 @login_required
 def delete_emergency_contact_view(request, pk):
     contact = get_object_or_404(EmergencyContact, pk=pk, customer__user=request.user)
     contact.delete()
     messages.success(request, "Contact removed.")
-    return redirect('client_preferences')
+    return redirect('users:client_preferences')

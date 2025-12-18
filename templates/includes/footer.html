@@ -1,0 +1,58 @@
+{% load static %}
+<footer class="w-full p-[5%] max-p-16 bg-slate-900 text-gray-300/80 grid space-y-6 border-t border-slate-800">
+    <div class="grid gap-y-4 lg:grid-cols-3 text-lg font-normal">
+        <div class="grid order-last lg:order-first w-full sm:max-w-[70%]">
+            <div class="flex gap-2 items-center">
+                <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-1 px-2 sm:px-3">
+                    <img src="{% static 'images/svg/dark_logo.png' %}" alt="Site Logo" class="size-6 sm:size-7 lg:size-8">
+                </div>
+                <p class="font-bold text-white text-xl sm:text-2xl lg:text-3xl">DriveMe Home</p>
+            </div>
+            <p class="text-lg font-normal">Safe, reliable designated driver service across Rwanda. Your safety is our mission.</p>
+            <div class="flex space-x-4 icon-wrapper">
+                <a href="#" class="hover:text-secondary transition-colors">{% lucide "facebook" size="24" stroke_width=2 class="my-icon" %}</a>
+                <a href="#" class="hover:text-secondary transition-colors">{% lucide "twitter" size="24" stroke_width=2 class="my-icon" %}</a>
+                <a href="#" class="hover:text-secondary transition-colors">{% lucide "instagram" size="24" stroke_width=1 fill="transparent" class="text-gret" %}</a>
+                <a href="#" class="hover:text-secondary transition-colors">{% lucide "linkedin" size="24" stroke_width=1  class="my-icon" %}</a>
+            </div>
+        </div>
+
+        <div class="grid gap-y-4 sm:grid-cols-3 lg:col-span-2 lg:grid-cols-3">
+            <div class="grid space-y-1.5">
+                <p class="font-semibold text-white text-lg">Company</p>
+                <a href="#" class="hover:text-secondary transition-colors">About Us</a>
+                <a href="{% url 'users:landing' %}#how-it-works" class="nav-link hover:text-secondary transition-colors">How It Works</a>
+                <a href="{% url 'users:landing' %}#safety" class="nav-link hover:text-secondary transition-colors">Safety</a>
+                <a href="#" class="hover:text-secondary transition-colors">Careers</a>
+                <a href="#" class="hover:text-secondary transition-colors">Press</a>
+            </div>
+
+            <div class="grid space-y-1.5">
+                <p class="font-semibold text-white text-lg">Support</p>
+                <a href="#" class="hover:text-secondary transition-colors">Help Center</a>
+                <a href="#" class="hover:text-secondary transition-colors">Contact Us</a>
+                <a href="#" class="hover:text-secondary transition-colors">Report Issue</a>
+                <a href="#" class="hover:text-secondary transition-colors">Emergency</a>
+                <a href="#" class="hover:text-secondary transition-colors">Lost Items</a>
+            </div>
+
+            <div class="grid content-start space-y-1.5">
+                <p class="font-semibold text-white text-lg">Legal</p>
+                <a href="#" class="hover:text-secondary transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-secondary transition-colors">Terms of Service</a>
+                <a href="#" class="hover:text-secondary transition-colors">Driver Agreement</a>
+                <a href="/admin" class="hover:text-secondary transition-colors">Admin Login</a>
+            </div>
+
+        </div>
+    </div>
+    <div class="w-full pt-8 border-t border-gray-400/20">
+        <div class="flex flex-col-reverse space-y-2 lg:flex lg:flex-row w-full justify-between text-sm text-gray-400">
+            <span>© 2024 DriveMe Home. All rights reserved.</span>
+            <p class="grid lg:flex space-x-4">
+                <span>Available in:</span>
+                <span>Kigali • Butare • Musanze</span>
+            </p>
+        </div>
+    </div>
+</footer>

@@ -1,0 +1,97 @@
+{% load static %}
+<header class="bg-white shadow sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <div class="flex items-center gap-3">
+                <!-- Mobile hamburger -->
+                <button @click="sidebarOpen = !sidebarOpen" class="text-gray-600 lg:hidden p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 6H20M4 12H20M4 18H11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </button>
+
+                <!-- Page title / breadcrumb -->
+                <div class="flex flex-col sm:flex-row">
+                    <span class="text-sm text-gray-500 hidden sm:block">You are here</span>
+                    <h2 class="text-lg font-semibold text-gray-900 ml-0 sm:ml-2">{% block page_title %}{% endblock %}</h2>
+                </div>
+            </div>
+
+            <!-- Center area (search / view name on small screens) -->
+            <div class="flex-1 px-4">
+                <div class="max-w-lg mx-auto">
+                    <div class="hidden sm:block">
+                        <label for="global-search" class="sr-only">Search</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <input id="global-search" class="w-full border border-gray-300 rounded-lg py-2 pl-9 pr-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-colors" placeholder="Search...">
+                        </div>
+                    </div>
+                    <!-- mobile title is handled by the main title element above -->
+                </div>
+            </div>
+
+            <!-- Right actions -->
+            <div class="flex items-center gap-4">
+                <!-- Notifications -->
+                <div class="relative">
+                    <button class="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-colors duration-150">
+                        <svg class="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-9.33-5M9 17H4l1.405-1.405A2.032 2.032 0 006 14.158V11c0-1.657 1.343-3 3-3"/></svg>
+                    </button>
+                    <span class="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">3</span>
+                </div>
+
+                <!-- CTA / quick action (visible on md+) -->
+                <div class="hidden md:block">
+                    <a href="/rides/new/" class="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-slate-900 px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-150">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        New Ride
+                    </a>
+                </div>
+
+                <!-- Profile Dropdown -->
+                <div x-data="{ dropdownOpen: false }" class="relative">
+                    <button @click="dropdownOpen = !dropdownOpen" class="relative block h-10 w-10 rounded-full overflow-hidden shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-150">
+                        <img id="profile-avatar" class="h-full w-full object-cover" src="{% static 'images/svg/person_add_blue.svg' %}" alt="Your avatar" onerror="showUserInitial()">
+                        <div id="profile-initial" class="hidden absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white font-bold text-sm">
+                            {{ user.first_name|first|upper|default:user.username|first|upper }}
+                        </div>
+                    </button>
+
+                    <div x-show="dropdownOpen" @click="dropdownOpen = false" class="fixed inset-0 h-full w-full z-10"></div>
+
+                    <div x-show="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-lg overflow-hidden shadow-xl z-10 border border-gray-100">
+                        <a href="{% url 'users:profile' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-100">Profile</a>
+                        {% if user.is_driver %}
+                        <a href="{% url 'users:driver_settings' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-100">Driver Settings</a>
+                        {% elif user.is_customer %}
+                        <a href="{% url 'users:customer_settings' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-100">Customer Settings</a>
+                        {% endif %}
+                        <a href="{% url 'users:logout' %}" class="block px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<script>
+    function showUserInitial() {
+        const avatar = document.getElementById('profile-avatar');
+        const initial = document.getElementById('profile-initial');
+        if (avatar && initial) {
+            avatar.style.display = 'none';
+            initial.classList.remove('hidden');
+        }
+    }
+    
+    // Fallback if image fails to load
+    document.addEventListener('DOMContentLoaded', function() {
+        const avatar = document.getElementById('profile-avatar');
+        if (avatar) {
+            avatar.addEventListener('error', showUserInitial);
+        }
+    });
+</script>

@@ -1,0 +1,22 @@
+<header class="bg-white shadow sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-14">
+            <div class="flex items-center gap-3">
+                <button @click="sidebarOpen = !sidebarOpen" class="text-gray-600 lg:hidden p-2 rounded-md hover:bg-gray-100 focus:outline-none">
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 6H20M4 12H20M4 18H11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </button>
+                <div>
+                    <h2 class="text-base font-semibold text-gray-900">{% block page_title %}{% endblock %}</h2>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <a href="{% url 'users:login' %}" class="text-sm text-gray-700 hover:text-blue-600">Login</a>
+                <a href="{% url 'users:register' %}" class="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-md">Sign up</a>
+                <a href="/rides/book/" class="hidden sm:inline-flex text-sm bg-yellow-400 hover:bg-yellow-500 text-slate-900 px-3 py-1.5 rounded-md">Book Ride</a>
+            </div>
+        </div>
+    </div>
+</header>
