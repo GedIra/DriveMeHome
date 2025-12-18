@@ -11,6 +11,8 @@ from django.core.paginator import Paginator # Added for pagination
 from users.models import CustomerVehicle, CustomerProfile, PreferredDestination, DriverProfile
 from .models import PricingConfiguration, Ride
 from .utils import get_distance_and_duration
+from django.utils import timezone
+from django.db import transaction
 
 @login_required
 def book_ride_view(request):
@@ -348,7 +350,8 @@ def driver_dashboard_view(request):
     context = {
         'driver': driver,
         'active_ride': active_ride,
-        'available_rides': available_rides
+        'available_rides': available_rides,
+        'mapbox_access_token': settings.MAPBOX_ACCESS_TOKEN,
     }
     return render(request, 'rides/driver_dashboard.html', context)
 
@@ -384,3 +387,102 @@ def update_driver_status_api(request):
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+@login_required
+@require_POST
+def accept_ride_api(request, ride_id):
+    """
+    Driver accepts a ride.
+    Enforces: Single active ride rule.
+    """
+    try:
+        driver = request.user.driver_profile
+        ride = get_object_or_404(Ride, id=ride_id)
+        
+        # 1. Check if Driver is already busy with an ACTIVE ride
+        # Active = ASSIGNED, ARRIVED, IN_PROGRESS
+        active_ride = Ride.objects.filter(
+            driver=driver,
+            status__in=[Ride.RideStatus.DRIVER_ASSIGNED, Ride.RideStatus.DRIVER_ARRIVED, Ride.RideStatus.IN_PROGRESS]
+        ).exists()
+
+        if active_ride:
+            return JsonResponse({'success': False, 'error': 'You already have an active ride. Complete it first.'}, status=400)
+
+        # 2. Check if Ride is still available
+        if ride.status != Ride.RideStatus.REQUESTED:
+            return JsonResponse({'success': False, 'error': 'This ride is no longer available.'}, status=400)
+
+        # 3. Assign Driver
+        with transaction.atomic():
+            ride.driver = driver
+            ride.status = Ride.RideStatus.DRIVER_ASSIGNED
+            ride.accepted_at = timezone.now()
+            ride.save()
+            
+            # Update Driver Status
+            driver.current_status = DriverProfile.DriverStatus.BUSY
+            driver.save()
+            
+            # Notify Customer (Placeholder for Notification App)
+            # send_notification(ride.customer.user, "Driver Found", f"{driver.user.username} has accepted your ride.", ...)
+
+        return JsonResponse({'success': True, 'ride_id': ride.id})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_POST
+def update_driver_location_api(request):
+    """
+    Updates driver's current location. Called via AJAX.
+    """
+    try:
+        driver = request.user.driver_profile
+        data = json.loads(request.body)
+        
+        lat = data.get('latitude')
+        lng = data.get('longitude')
+        
+        if lat and lng:
+            driver.current_latitude = lat
+            driver.current_longitude = lng
+            driver.save()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'error': 'Invalid coordinates'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_GET
+def get_ride_details_api(request, ride_id):
+    """
+    Returns details for the Modal (Route, Client Info, Price).
+    """
+    ride = get_object_or_404(Ride, id=ride_id)
+    
+    # Calculate driver earning if not set (estimated)
+    # This logic mimics the estimate_fare logic but just returns values
+    earning = ride.driver_earnings
+    if not earning and ride.estimated_price:
+         # Simple recalculation if needed or just use estimated total for now if earning isn't saved yet
+         # Ideally earning is saved on estimate_fare()
+         pass
+
+    data = {
+        'id': ride.id,
+        'customer_name': ride.customer.user.username,
+        'customer_avatar': ride.customer.profile_picture.url if ride.customer.profile_picture else None,
+        'pickup': ride.pickup_address,
+        'pickup_lat': ride.pickup_latitude,
+        'pickup_lng': ride.pickup_longitude,
+        'dropoff': ride.dropoff_address,
+        'dropoff_lat': ride.dropoff_latitude,
+        'dropoff_lng': ride.dropoff_longitude,
+        'distance': ride.distance_km,
+        'duration': ride.estimated_duration_min,
+        'est_earning': ride.driver_earnings or (ride.estimated_price * Decimal('0.8')), # Fallback 80%
+        'status': ride.status,
+    }
+    return JsonResponse({'success': True, 'ride': data})

@@ -3,10 +3,18 @@
 
 {% block title %}Driver Dashboard - DriveMe Home{% endblock %}
 
+{% block extra_head %}
+<!-- Mapbox for the Modal -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/3.1.2/mapbox-gl.css" rel="stylesheet">
+<style>
+    .ride-card:hover { transform: translateY(-2px); transition: all 0.2s; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mx-auto px-4 py-8 mt-20">
     
-    <!-- Header & Status Toggle -->
+    <!-- Header & Status Toggle (Keep existing) -->
     <div class="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">Welcome, {{ user.username }}</h1>
@@ -27,8 +35,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+    <div id="dashboard-content" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- LEFT COLUMN: Job Queue / Active Ride -->
         <div class="lg:col-span-2 space-y-6">
             
@@ -67,25 +74,27 @@
                 </div>
             </div>
             
-            <!-- SECTION B: JOB REQUESTS (Only if online & no active ride) -->
+            <!-- SECTION B: JOB REQUESTS -->
             {% else %}
                 <h2 class="text-xl font-bold text-gray-800 mb-4">Incoming Requests</h2>
                 
-                {% if driver.current_status == 'OFFLINE' %}
-                    <div class="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                        <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-                        <p class="text-gray-500">You are offline. Go online to see requests.</p>
-                    </div>
-                {% elif available_rides %}
+                {% if available_rides %}
                     <div class="space-y-4">
                         {% for ride in available_rides %}
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:border-blue-300 transition cursor-pointer group">
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 ride-card cursor-pointer group"
+                             onclick="openRideModal('{{ ride.id }}')">
                             <div class="flex justify-between mb-3">
                                 <div class="flex items-center gap-2">
                                     <div class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">RWF {{ ride.estimated_price }}</div>
                                     <span class="text-gray-400 text-xs">• {{ ride.distance_km }} km</span>
                                 </div>
-                                <span class="text-gray-400 text-xs">{{ ride.created_at|timesince }} ago</span>
+                                <span class="text-gray-400 text-xs">
+                                    {% if ride.scheduled_for %}
+                                        📅 {{ ride.scheduled_for|date:"M d, H:i" }}
+                                    {% else %}
+                                        Now
+                                    {% endif %}
+                                </span>
                             </div>
                             
                             <div class="flex items-start gap-3 mb-4">
@@ -99,67 +108,127 @@
                                     <p class="text-sm font-medium text-gray-900 mt-2 line-clamp-1">{{ ride.dropoff_address }}</p>
                                 </div>
                             </div>
-
-                            <div class="flex items-center justify-between border-t pt-3 border-gray-100">
-                                <div class="text-xs text-gray-500">
-                                    Vehicle: <span class="font-semibold text-gray-700">{{ ride.vehicle.name }} ({{ ride.vehicle.get_transmission_type_display }})</span>
-                                </div>
-                                <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition">
-                                    Accept
-                                </button>
-                            </div>
+                            
+                            <p class="text-xs text-blue-600 font-semibold group-hover:underline">Click to view details & accept</p>
                         </div>
                         {% endfor %}
                     </div>
                 {% else %}
                     <div class="text-center py-12 bg-white rounded-xl shadow-sm">
-                        <div class="animate-pulse flex justify-center mb-4">
+                         <div class="animate-pulse flex justify-center mb-4">
                             <div class="h-3 w-3 bg-blue-500 rounded-full mr-1"></div>
                             <div class="h-3 w-3 bg-blue-500 rounded-full mr-1 animation-delay-200"></div>
                             <div class="h-3 w-3 bg-blue-500 rounded-full animation-delay-400"></div>
                         </div>
-                        <p class="text-gray-500">Searching for nearby rides...</p>
+                        <p class="text-gray-500">Waiting for ride requests...</p>
                     </div>
                 {% endif %}
             {% endif %}
         </div>
 
-        <!-- RIGHT COLUMN: Stats & Earnings -->
+        <!-- RIGHT COLUMN: Stats (Keep existing) -->
         <div class="space-y-6">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <h3 class="text-lg font-bold text-gray-800 mb-4">Today's Earnings</h3>
                 <div class="text-3xl font-bold text-green-600 mb-1">RWF 0</div>
                 <p class="text-xs text-gray-400">0 Rides completed</p>
-                
-                <div class="mt-6 pt-6 border-t border-gray-100">
-                    <div class="flex justify-between mb-2">
-                        <span class="text-sm text-gray-600">Performance</span>
-                        <span class="text-sm font-bold text-gray-800">{{ driver.average_rating }} ★</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-1.5">
-                        <div class="bg-yellow-400 h-1.5 rounded-full" style="width: 90%"></div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- RIDE REQUEST MODAL (Flowbite) -->
+<div id="ride-request-modal" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full bg-gray-900/50 backdrop-blur-sm justify-center items-center">
+    <div class="relative w-full max-w-2xl max-h-full m-auto">
+        <div class="relative bg-white rounded-lg shadow-2xl overflow-hidden">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-4 border-b rounded-t bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-900">New Ride Request</h3>
+                <button type="button" onclick="closeRideModal()" class="text-gray-400 bg-transparent hover:bg-gray-200 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-0">
+                <!-- Map Container (Top Half) -->
+                <div id="modal-map" class="w-full h-64 bg-gray-200 relative"></div>
+                
+                <!-- Info Container (Bottom Half) -->
+                <div class="p-6 space-y-4">
+                    <!-- Client Info -->
+                    <div class="flex items-center gap-4">
+                        <div id="modal-avatar" class="w-12 h-12 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center text-gray-500 font-bold">
+                            ?
+                        </div>
+                        <div>
+                            <h4 id="modal-client-name" class="font-bold text-gray-800 text-lg">Loading...</h4>
+                            <p class="text-sm text-gray-500">Is requesting a driver</p>
+                        </div>
+                        <div class="ml-auto text-right">
+                            <p class="text-xs text-gray-500 uppercase">Est. Earning</p>
+                            <p id="modal-earning" class="text-xl font-bold text-green-600">RWF --</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Pickup</p>
+                            <p id="modal-pickup" class="text-sm font-medium text-gray-800 truncate">--</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Dropoff</p>
+                            <p id="modal-dropoff" class="text-sm font-medium text-gray-800 truncate">--</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Distance</p>
+                            <p id="modal-distance" class="text-sm font-medium text-gray-800">-- km</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Duration</p>
+                            <p id="modal-duration" class="text-sm font-medium text-gray-800">-- min</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex items-center p-4 border-t border-gray-200 rounded-b bg-gray-50 gap-4">
+                <button id="btn-accept-ride" type="button" class="w-full text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-lg px-5 py-3 text-center transition-all shadow-lg hover:-translate-y-0.5">
+                    Accept Ride
+                </button>
+                <button onclick="closeRideModal()" type="button" class="py-3 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100">
+                    Ignore
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/3.1.2/mapbox-gl.js"></script>
 <script>
-    // AJAX for toggling status
+    window.mapboxAccessToken = "{{ mapbox_access_token }}";
+    window.csrfToken = "{{ csrf_token }}";
+    window.updateLocationUrl = "{% url 'api_update_location' %}";
+    // Placeholders for dynamic URLs
+    window.acceptRideBaseUrl = "/rides/api/driver/accept/"; 
+    window.rideDetailsBaseUrl = "/rides/api/ride/details/";
+</script>
+<script src="{% static 'js/driver_logic.js' %}"></script>
+<script>
+    // Include existing toggle logic if not moved to driver_logic.js
     const toggle = document.getElementById('toggle-online');
     const label = document.getElementById('status-label');
-    
     if(toggle) {
         toggle.addEventListener('change', async () => {
             const newStatus = toggle.checked ? 'AVAILABLE' : 'OFFLINE';
             try {
                 const res = await fetch("{% url 'api_update_driver_status' %}", {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
                     body: JSON.stringify({ status: newStatus })
                 });
                 const data = await res.json();
@@ -167,14 +236,9 @@
                     label.textContent = data.display_status;
                     label.className = `text-sm font-semibold ${newStatus === 'AVAILABLE' ? 'text-green-600' : 'text-gray-500'}`;
                 } else {
-                    alert('Error updating status');
-                    toggle.checked = !toggle.checked; // Revert
+                    alert('Error updating status'); toggle.checked = !toggle.checked;
                 }
-            } catch(e) {
-                console.error(e);
-                alert('Connection error');
-                toggle.checked = !toggle.checked;
-            }
+            } catch(e) { console.error(e); toggle.checked = !toggle.checked; }
         });
     }
 </script>
