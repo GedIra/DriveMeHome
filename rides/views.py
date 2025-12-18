@@ -13,6 +13,9 @@ from .models import PricingConfiguration, Ride
 from .utils import get_distance_and_duration
 from django.utils import timezone
 from django.db import transaction
+from django.shortcuts import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import Review
 
 @login_required
 def book_ride_view(request):
@@ -539,3 +542,74 @@ def update_ride_status_api(request, ride_id):
         return JsonResponse({'success': False, 'error': 'Ride not found or you are not assigned to it.'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def create_review_api(request, ride_id):
+    """
+    Create a review for a ride. Expects JSON: {rating: int, comment: str}
+    Only participants may review and only after ride is COMPLETED.
+    Prevent duplicate reviews by same reviewer.
+    """
+    try:
+        ride = get_object_or_404(Ride, id=ride_id)
+
+        if ride.status != Ride.RideStatus.COMPLETED:
+            return JsonResponse({'success': False, 'error': 'Ride not completed yet.'}, status=400)
+
+        user = request.user
+
+        # Ensure user is participant
+        is_driver = hasattr(user, 'driver_profile') and ride.driver and ride.driver == user.driver_profile
+        is_customer = hasattr(user, 'customer_profile') and ride.customer == user.customer_profile
+
+        if not (is_driver or is_customer):
+            return JsonResponse({'success': False, 'error': 'You are not a participant of this ride.'}, status=403)
+
+        # Prevent duplicate
+        if Review.objects.filter(ride=ride, reviewer=user).exists():
+            return JsonResponse({'success': False, 'error': 'You have already reviewed this ride.'}, status=400)
+
+        data = json.loads(request.body)
+        rating = int(data.get('rating', 0))
+        comment = data.get('comment', '').strip()
+
+        if rating < 1 or rating > 5:
+            return JsonResponse({'success': False, 'error': 'Rating must be between 1 and 5.'}, status=400)
+
+        reviewer_type = Review.ReviewerType.DRIVER if is_driver else Review.ReviewerType.CUSTOMER
+
+        review = Review.objects.create(
+            ride=ride,
+            reviewer=user,
+            rating=rating,
+            comment=comment,
+            reviewer_type=reviewer_type
+        )
+
+        return JsonResponse({'success': True, 'review_id': review.id})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_GET
+def reviews_list_view(request):
+    """List reviews received by current user (drivers see customer reviews; customers see driver reviews)."""
+    user = request.user
+    reviews = Review.objects.none()
+
+    if hasattr(user, 'driver_profile'):
+        # Reviews where ride.driver == this driver and reviewer_type == CUSTOMER
+        reviews = Review.objects.filter(ride__driver=user.driver_profile, reviewer_type=Review.ReviewerType.CUSTOMER)
+    elif hasattr(user, 'customer_profile'):
+        # Reviews where ride.customer == this customer and reviewer_type == DRIVER
+        reviews = Review.objects.filter(ride__customer=user.customer_profile, reviewer_type=Review.ReviewerType.DRIVER)
+
+    reviews = reviews.select_related('ride', 'reviewer').order_by('-created_at')
+    paginator = Paginator(reviews, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'rides/reviews_list.html', {'page_obj': page_obj})

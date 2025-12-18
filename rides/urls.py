@@ -15,6 +15,8 @@ urlpatterns = [
     
     # Driver Views
     path('driver/dashboard/', views.driver_dashboard_view, name='driver_dashboard'),
+    path('reviews/', views.reviews_list_view, name='reviews_list'),
+    path('api/review/create/<int:ride_id>/', views.create_review_api, name='api_create_review'),
     path('api/driver/status/', views.update_driver_status_api, name='api_update_driver_status'),
     path('api/driver/accept/<int:ride_id>/', views.accept_ride_api, name='api_accept_ride'),
     path('api/driver/location/update/', views.update_driver_location_api, name='api_update_location'),

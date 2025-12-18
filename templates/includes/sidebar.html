@@ -26,10 +26,21 @@
                     {% lucide 'user' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
                     <span>Profile</span>
                 </a>
+                <a href="{% url 'rides:reviews_list' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                    {% lucide 'star' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>My Reviews</span>
+                </a>
                 <a href="{% url 'users:driver_settings' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
                     {% lucide 'settings' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
                     <span>Settings</span>
                 </a>
+                <div class="px-4 py-2 flex items-center gap-2">
+                    {% lucide 'credit-card' size=16 class='text-white/60' stroke_width='2' %}
+                    <div>
+                        <span class="text-white/40 text-xs font-semibold uppercase">Transactions</span>
+                        <div class="text-white/50 text-xs mt-1">Coming soon</div>
+                    </div>
+                </div>
                 <a href="{% url 'users:logout' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
                     {% lucide 'log-out' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
                     <span>Logout</span>
@@ -52,6 +63,13 @@
                     {% lucide 'settings' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
                     <span>Settings</span>
                 </a>
+                <div class="px-4 py-2 flex items-center gap-2">
+                    {% lucide 'credit-card' size=16 class='text-white/60' stroke_width='2' %}
+                    <div>
+                        <span class="text-white/40 text-xs font-semibold uppercase">Transactions</span>
+                        <div class="text-white/50 text-xs mt-1">Coming soon</div>
+                    </div>
+                </div>
                 <a href="{% url 'users:client_preferences' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
                     {% lucide 'sliders-horizontal' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
                     <span>Preferences</span>

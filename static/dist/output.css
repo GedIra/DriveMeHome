@@ -808,9 +808,6 @@
   .-top-0\.5 {
     top: calc(var(--spacing) * -0.5);
   }
-  .-top-1 {
-    top: calc(var(--spacing) * -1);
-  }
   .top-0 {
     top: calc(var(--spacing) * 0);
   }
@@ -819,9 +816,6 @@
   }
   .-right-0\.5 {
     right: calc(var(--spacing) * -0.5);
-  }
-  .-right-1 {
-    right: calc(var(--spacing) * -1);
   }
   .right-0 {
     right: calc(var(--spacing) * 0);
@@ -919,17 +913,8 @@
   .mt-8 {
     margin-top: calc(var(--spacing) * 8);
   }
-  .mt-10 {
-    margin-top: calc(var(--spacing) * 10);
-  }
-  .mt-20 {
-    margin-top: calc(var(--spacing) * 20);
-  }
   .mt-24 {
     margin-top: calc(var(--spacing) * 24);
-  }
-  .mt-auto {
-    margin-top: auto;
   }
   .apexcharts-canvas {
     & .apexcharts-tooltip {
@@ -1400,9 +1385,6 @@
   .h-8 {
     height: calc(var(--spacing) * 8);
   }
-  .h-9 {
-    height: calc(var(--spacing) * 9);
-  }
   .h-10 {
     height: calc(var(--spacing) * 10);
   }
@@ -1426,12 +1408,6 @@
   }
   .h-\[calc\(100\%-1rem\)\] {
     height: calc(100% - 1rem);
-  }
-  .h-\[calc\(100vh-4rem\)\] {
-    height: calc(100vh - 4rem);
-  }
-  .h-\[calc\(100vh-5rem\)\] {
-    height: calc(100vh - 5rem);
   }
   .h-fit {
     height: fit-content;
@@ -1537,9 +1513,6 @@
   .w-8 {
     width: calc(var(--spacing) * 8);
   }
-  .w-9 {
-    width: calc(var(--spacing) * 9);
-  }
   .w-10 {
     width: calc(var(--spacing) * 10);
   }
@@ -1566,9 +1539,6 @@
   }
   .w-72 {
     width: calc(var(--spacing) * 72);
-  }
-  .w-auto {
-    width: auto;
   }
   .w-full {
     width: 100%;
@@ -2143,9 +2113,6 @@
   .bg-gray-600 {
     background-color: var(--color-gray-600);
   }
-  .bg-gray-800 {
-    background-color: var(--color-gray-800);
-  }
   .bg-gray-900\/50 {
     background-color: color-mix(in srgb, oklch(21% 0.034 264.665) 50%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -2407,9 +2374,6 @@
   }
   .py-6 {
     padding-block: calc(var(--spacing) * 6);
-  }
-  .py-7 {
-    padding-block: calc(var(--spacing) * 7);
   }
   .py-8 {
     padding-block: calc(var(--spacing) * 8);
@@ -2761,6 +2725,18 @@
   }
   .text-white {
     color: var(--color-white);
+  }
+  .text-white\/40 {
+    color: color-mix(in srgb, #fff 40%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-white) 40%, transparent);
+    }
+  }
+  .text-white\/50 {
+    color: color-mix(in srgb, #fff 50%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-white) 50%, transparent);
+    }
   }
   .text-white\/60 {
     color: color-mix(in srgb, #fff 60%, transparent);
@@ -3139,24 +3115,10 @@
       }
     }
   }
-  .hover\:bg-gray-700 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-gray-700);
-      }
-    }
-  }
   .hover\:bg-green-700 {
     &:hover {
       @media (hover: hover) {
         background-color: var(--color-green-700);
-      }
-    }
-  }
-  .hover\:bg-indigo-600 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-indigo-600);
       }
     }
   }
@@ -3254,13 +3216,6 @@
       }
     }
   }
-  .hover\:text-gray-300 {
-    &:hover {
-      @media (hover: hover) {
-        color: var(--color-gray-300);
-      }
-    }
-  }
   .hover\:text-gray-900 {
     &:hover {
       @media (hover: hover) {
@@ -3286,13 +3241,6 @@
     &:hover {
       @media (hover: hover) {
         color: var(--color-secondary);
-      }
-    }
-  }
-  .hover\:text-white {
-    &:hover {
-      @media (hover: hover) {
-        color: var(--color-white);
       }
     }
   }
@@ -3415,16 +3363,6 @@
   .sm\:block {
     @media (width >= 40rem) {
       display: block;
-    }
-  }
-  .sm\:flex {
-    @media (width >= 40rem) {
-      display: flex;
-    }
-  }
-  .sm\:hidden {
-    @media (width >= 40rem) {
-      display: none;
     }
   }
   .sm\:inline-flex {
