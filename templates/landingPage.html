@@ -1,16 +1,1 @@
 
-{% extends 'base.html' %}
-{% load static %}
-
-{% block title %}DriveMe Home — Welcome{% endblock %}
-
-{% block content %}
-<div style="background-image: url('{% static 'images/public/taxi.jpeg' %}'); background-size: cover; background-position: center; min-height: 100vh; display:flex; align-items:center; justify-content:center;">
-	<div style="background: rgba(0,0,0,0.45); padding: 2rem; border-radius: 8px; color: #fff; max-width: 900px; text-align:center;">
-		<h1 style="font-size:2.25rem; margin-bottom:0.5rem;">DriveMe Home</h1>
-		<p style="font-size:1.125rem; margin-bottom:1rem;">Fast, affordable rides across the city.</p>
-		<a href="{% url 'rides:book_ride' %}" style="display:inline-block; background:#ffcc00; color:#111; padding:0.75rem 1.25rem; border-radius:6px; font-weight:600; text-decoration:none;">Book a Ride</a>
-	</div>
-</div>
-{% endblock %}
-
