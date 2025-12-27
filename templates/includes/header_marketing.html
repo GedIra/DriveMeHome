@@ -1,22 +1,36 @@
+{% load static %}
 <header class="bg-white shadow sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-14">
-            <div class="flex items-center gap-3">
-                <button @click="sidebarOpen = !sidebarOpen" class="text-gray-600 lg:hidden p-2 rounded-md hover:bg-gray-100 focus:outline-none">
-                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 6H20M4 12H20M4 18H11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                    </svg>
-                </button>
-                <div>
-                    <h2 class="text-base font-semibold text-gray-900">{% block page_title %}{% endblock %}</h2>
-                </div>
-            </div>
+    <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
+        <div class="hidden lg:flex w-full justify-center items-center p-4">
+            <ul class="flex w-full justify-between items-center">
+                <a href="{% url 'landing' %}" class="flex space-x-4 items-center">
+                    <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-1 px-3">
+                        <img src="{% static 'images/svg/dark_logo.png' %}" alt="Site Logo" class="w-9 h-8">
+                    </div>
+                    <span class="font-bold text-3xl text-primary">DriveMe Home</span>
+                </a>
 
-            <div class="flex items-center gap-4">
-                <a href="{% url 'users:login' %}" class="text-sm text-gray-700 hover:text-blue-600">Login</a>
-                <a href="{% url 'users:register' %}" class="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-md">Sign up</a>
-                <a href="/rides/book/" class="hidden sm:inline-flex text-sm bg-yellow-400 hover:bg-yellow-500 text-slate-900 px-3 py-1.5 rounded-md">Book Ride</a>
-            </div>
+                <li class="flex gap-x-8 text-lg font-normal text-neutral-600">
+                    <a href="{% url 'landing' %}#how-it-works" class="nav-link">How It Works</a>
+                    <a href="{% url 'landing' %}#safety" class="nav-link">Safety</a>
+                    <a href="{% url 'landing' %}#pricing" class="nav-link">Pricing</a>
+                    <a href="{% url 'info:support' %}">Support</a>
+                    <a href="{% url 'users:register' %}" class="font-medium text-primary">Sign up</a>
+                    <a href="{% url 'users:login' %}" class="font-medium text-primary">Log In</a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="static flex w-full justify-center items-center h-20 px-4 lg:hidden">
+            <ul class="flex w-full items-center justify-between">
+                <a href="{% url 'landing' %}" class="flex space-x-4 items-center">
+                    <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-2 px-3">
+                        <img src="{% static 'images/svg/dark_logo.png' %}" alt="Site Logo" class="w-8 h-7">
+                    </div>
+                    <span class="font-bold text-2xl text-primary">DriveMe Home</span>
+                </a>
+                <img src="{% static 'images/svg/menu.svg' %}" alt="menu button" class="w-10">
+            </ul>
         </div>
     </div>
 </header>

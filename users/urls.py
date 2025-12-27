@@ -22,7 +22,6 @@ app_name = 'users'
 
 urlpatterns = [
     # Authentication
-    path('', landing_view, name='landing'),
     path('login/', UserLoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     path('register/', RegisterView.as_view(), name='register'),

@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'users',
     'lucide',
     'rides',
-    'notifications'
+    'notifications',
+    'info'
 ]
 
 MIDDLEWARE = [

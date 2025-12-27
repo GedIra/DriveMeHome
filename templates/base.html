@@ -46,20 +46,45 @@
     <!-- JavaScript files -->
     {% block scripts %}
     <script>
-        document.querySelectorAll('.nav-link').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-
-                const targetId = this.getAttribute('href').split('#')[1];
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to handle smooth scrolling
+            function smoothScrollTo(targetId) {
                 const targetElement = document.getElementById(targetId);
-
                 if (targetElement) {
                     window.scrollTo({
                         top: targetElement.offsetTop,
                         behavior: 'smooth'
                     });
                 }
+            }
+
+            // Handle clicks on navigation links
+            document.querySelectorAll('.nav-link').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    const hashIndex = href.lastIndexOf('#');
+                    
+                    if (hashIndex !== -1) {
+                        const targetId = href.substring(hashIndex + 1);
+                        
+                        // Check if the link is on the same page
+                        if (window.location.pathname === href.substring(0, hashIndex) || href.startsWith('#')) {
+                            e.preventDefault();
+                            smoothScrollTo(targetId);
+                        }
+                        // For links to other pages, the default browser behavior will handle it
+                    }
+                });
             });
+
+            // Handle direct anchor navigation on page load
+            if (window.location.hash) {
+                const targetId = window.location.hash.substring(1);
+                // Use a small timeout to ensure the page has loaded
+                setTimeout(() => {
+                    smoothScrollTo(targetId);
+                }, 100);
+            }
         });
     </script>
     {% endblock %}
