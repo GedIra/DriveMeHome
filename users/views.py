@@ -13,6 +13,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.core.mail import EmailMultiAlternatives
 from .tokens import account_activation_token
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from .forms import (
     CustomLoginForm, CustomUserCreationForm, 
     EmailThread, DriverProfileForm, 
@@ -28,6 +29,12 @@ from django.contrib.auth.decorators import login_required
 User = get_user_model()
 
 def landing_view(request):
+    # Redirect authenticated users based on their role
+    if request.user.is_authenticated:
+        if request.user.is_driver:
+            return redirect('rides:driver_dashboard')
+        elif request.user.is_customer:
+            return redirect('rides:book_ride')
     return render(request, 'users/landingPage.html')
 
 # --- LOGIN VIEW ---
@@ -40,6 +47,17 @@ class UserLoginView(LoginView):
     context = super().get_context_data(**kwargs)
     context['title'] = 'Log In - DriveMe Home'
     return context
+  
+  def get_success_url(self):
+    """
+    Redirect to appropriate dashboard based on user role.
+    """
+    user = self.request.user
+    if user.is_driver:
+        return reverse_lazy('rides:driver_dashboard')
+    elif user.is_customer:
+        return reverse_lazy('rides:book_ride')
+    return reverse_lazy('users:landing')
   
 # --- USERNAME EMAIL PHONENUMBER EXISTENCE CHECK VIEWS --- 
 def check_username_existence(request):
