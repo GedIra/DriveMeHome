@@ -21,11 +21,19 @@
         <div class="grid gap-y-4 sm:grid-cols-3 lg:col-span-2 lg:grid-cols-3">
             <div class="grid space-y-1.5">
                 <p class="font-semibold text-white text-lg">Company</p>
-                <a href="{% url 'landing' %}#about-us" class="hover:text-secondary transition-colors">About Us</a>
-                <a href="{% url 'landing' %}#how-it-works" class="nav-link hover:text-secondary transition-colors">How It Works</a>
-                <a href="{% url 'landing' %}#safety" class="nav-link hover:text-secondary transition-colors">Safety</a>
-                <a href="{% url 'landing' %}" class="hover:text-secondary transition-colors">Careers</a>
-                <a href="{% url 'landing' %}" class="hover:text-secondary transition-colors">Press</a>
+                {% if request.resolver_match and request.resolver_match.url_name == 'landing' %}
+                    <a href="#about-us" class="hover:text-secondary transition-colors">About Us</a>
+                    <a href="#how-it-works" class="nav-link hover:text-secondary transition-colors">How It Works</a>
+                    <a href="#safety" class="nav-link hover:text-secondary transition-colors">Safety</a>
+                    <a href="#" class="hover:text-secondary transition-colors">Careers</a>
+                    <a href="#" class="hover:text-secondary transition-colors">Press</a>
+                {% else %}
+                    <a href="{% url 'landing' %}#about-us" class="hover:text-secondary transition-colors">About Us</a>
+                    <a href="{% url 'landing' %}#how-it-works" class="nav-link hover:text-secondary transition-colors">How It Works</a>
+                    <a href="{% url 'landing' %}#safety" class="nav-link hover:text-secondary transition-colors">Safety</a>
+                    <a href="{% url 'landing' %}" class="hover:text-secondary transition-colors">Careers</a>
+                    <a href="{% url 'landing' %}" class="hover:text-secondary transition-colors">Press</a>
+                {% endif %}
             </div>
 
             <div class="grid space-y-1.5">

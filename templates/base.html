@@ -47,32 +47,48 @@
     {% block scripts %}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Function to handle smooth scrolling
+            // Find nearest scrollable ancestor (or window)
+            function getScrollContainer(el) {
+                let parent = el.parentElement;
+                while (parent && parent !== document.body) {
+                    const style = window.getComputedStyle(parent);
+                    const overflowY = style.overflowY;
+                    if (overflowY === 'auto' || overflowY === 'scroll' || parent.scrollHeight > parent.clientHeight) {
+                        return parent;
+                    }
+                    parent = parent.parentElement;
+                }
+                return window;
+            }
+
+            // Function to handle smooth scrolling to a target element within the correct container
             function smoothScrollTo(targetId) {
                 const targetElement = document.getElementById(targetId);
-                if (targetElement) {
-                    window.scrollTo({
-                        top: targetElement.offsetTop,
-                        behavior: 'smooth'
-                    });
+                if (!targetElement) return;
+
+                const container = getScrollContainer(targetElement);
+
+                if (container === window) {
+                    const top = targetElement.getBoundingClientRect().top + window.pageYOffset;
+                    window.scrollTo({ top, behavior: 'smooth' });
+                } else {
+                    const containerRect = container.getBoundingClientRect();
+                    const targetRect = targetElement.getBoundingClientRect();
+                    const top = targetRect.top - containerRect.top + container.scrollTop;
+                    container.scrollTo({ top, behavior: 'smooth' });
                 }
             }
 
             // Handle clicks on navigation links
-            document.querySelectorAll('.nav-link').forEach(anchor => {
+            document.querySelectorAll('a[href*="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function(e) {
                     const href = this.getAttribute('href');
-                    const hashIndex = href.lastIndexOf('#');
-                    
-                    if (hashIndex !== -1) {
-                        const targetId = href.substring(hashIndex + 1);
-                        
-                        // Check if the link is on the same page
-                        if (window.location.pathname === href.substring(0, hashIndex) || href.startsWith('#')) {
-                            e.preventDefault();
-                            smoothScrollTo(targetId);
-                        }
-                        // For links to other pages, the default browser behavior will handle it
+                    const targetId = href.substring(href.lastIndexOf('#') + 1);
+                    const targetElement = document.getElementById(targetId);
+
+                    if (targetElement) {
+                        e.preventDefault();
+                        smoothScrollTo(targetId);
                     }
                 });
             });

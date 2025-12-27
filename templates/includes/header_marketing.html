@@ -11,9 +11,15 @@
                 </a>
 
                 <li class="flex gap-x-8 text-lg font-normal text-neutral-600">
-                    <a href="{% url 'landing' %}#how-it-works" class="nav-link">How It Works</a>
-                    <a href="{% url 'landing' %}#safety" class="nav-link">Safety</a>
-                    <a href="{% url 'landing' %}#pricing" class="nav-link">Pricing</a>
+                    {% if request.resolver_match and request.resolver_match.url_name == 'landing' %}
+                        <a href="#how-it-works" class="nav-link">How It Works</a>
+                        <a href="#safety" class="nav-link">Safety</a>
+                        <a href="#pricing" class="nav-link">Pricing</a>
+                    {% else %}
+                        <a href="{% url 'landing' %}#how-it-works" class="nav-link">How It Works</a>
+                        <a href="{% url 'landing' %}#safety" class="nav-link">Safety</a>
+                        <a href="{% url 'landing' %}#pricing" class="nav-link">Pricing</a>
+                    {% endif %}
                     <a href="{% url 'info:support' %}">Support</a>
                     <a href="{% url 'users:register' %}" class="font-medium text-primary">Sign up</a>
                     <a href="{% url 'users:login' %}" class="font-medium text-primary">Log In</a>
