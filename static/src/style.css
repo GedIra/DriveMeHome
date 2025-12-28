@@ -57,3 +57,18 @@
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
 }
+
+.fixed-header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 40;
+    width: 100%;
+}
+.logged-in .fixed-header {
+    @media (min-width: 1024px) {
+        left: 18rem;
+        width: calc(100% - 18rem);
+    }
+}
