@@ -20,11 +20,10 @@
 <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 <body x-data="{ sidebarOpen: false }">
     <div class="flex h-screen bg-gray-100">
-        <!-- Sidebar -->
-        {% include 'includes/sidebar.html' %}
-
-        <div class="flex-1 flex flex-col overflow-hidden lg:ml-72">
-            <!-- Navbar -->
+        {% if user.is_authenticated %}
+            {% include 'includes/sidebar.html' %}
+        {% endif %}
+        <div class="flex-1 flex flex-col overflow-hidden {% if user.is_authenticated %}lg:ml-72{% endif %}">
             {% if user.is_authenticated %}
                 {% include 'includes/logged_in_header.html' %}
             {% else %}

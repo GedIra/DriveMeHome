@@ -214,7 +214,7 @@ def profile_view(request):
     return render(request, template_name, context)
 
 # --- DRIVER APPLICATION VIEW ---
-@login_required
+@login_required(login_url='users:login')
 def driver_application_view(request):
     user = request.user
     
