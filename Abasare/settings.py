@@ -151,6 +151,9 @@ LOGIN_URL = 'users:login'
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # --- EMAIL CONFIGURATION (Development) ---
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # DEFAULT_FROM_EMAIL = 'DriveMe Home <support@drivemehome.rw>'

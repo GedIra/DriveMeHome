@@ -1,5 +1,5 @@
 {% load static %}
-<header class="bg-gray-100 shadow scroll-header z-30">
+<header class="bg-yellow-600 shadow scroll-header z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
             <div class="flex items-center gap-3">
@@ -54,13 +54,12 @@
                 <!-- Profile Dropdown -->
                 <div x-data="{ dropdownOpen: false }" class="relative">
                     <button @click="dropdownOpen = !dropdownOpen" class="relative block h-10 w-10 rounded-full overflow-hidden shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-150">
-                        {% if user.profile.profile_picture %}
-                            <img id="profile-avatar" class="h-full w-full object-contain object-center" src="{{ user.profile.profile_picture.url }}" alt="Your avatar" onerror="showUserInitial()">
-                             <div id="profile-initial" class="hidden absolute inset-0 flex items-center justify-center bg-linear-to-br from-blue-500 to-blue-600 text-white font-bold text-lg">
-                                {{ user.first_name|first|upper|default:user.username|first|upper }}
-                            </div>
+                        {% if user.is_customer and user.customer_profile.profile_picture %}
+                            <img id="profile-avatar" class="h-full w-full object-cover object-center" src="{{ user.customer_profile.profile_picture.url }}" alt="Your avatar" onerror="showUserInitial()">
+                        {% elif user.is_driver and user.driver_profile.profile_picture %}
+                             <img id="profile-avatar" class="h-full w-full object-cover object-center" src="{{ user.driver_profile.profile_picture.url }}" alt="Your avatar" onerror="showUserInitial()">
                         {% else %}
-                            <div id="profile-initial" class="flex items-center justify-center w-full h-full bg-linear-to-br from-blue-500 to-blue-600 text-white font-bold text-sm">
+                            <div id="profile-initial" class="flex items-center justify-center w-full h-full bg-blue-500 text-white font-bold text-sm">
                                 {{ user.first_name|first|upper|default:user.username|first|upper }}
                             </div>
                         {% endif %}

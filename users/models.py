@@ -32,7 +32,7 @@ class DriverProfile(models.Model):
         BUSY = 'BUSY', _('Busy on Ride')
 
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='driver_profile')
-    profile_picture = models.ImageField(upload_to='drivers/avatars/', blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='media/drivers/avatars/', blank=True, null=True)
     
     # Verification
     license_number = models.CharField(max_length=20, unique=True, blank=True, null=True)
@@ -40,10 +40,10 @@ class DriverProfile(models.Model):
     is_verified = models.BooleanField(default=False)
     
     # Docs
-    driving_license_file = models.FileField(upload_to='drivers/licenses/', blank=True, null=True)
-    national_id_file = models.FileField(upload_to='drivers/ids/', blank=True, null=True)
-    criminal_record_file = models.FileField(upload_to='drivers/criminal_records/', blank=True, null=True)
-    other_documents_file = models.FileField(upload_to='drivers/others/', blank=True, null=True)
+    driving_license_file = models.FileField(upload_to='media/drivers/licenses/', blank=True, null=True)
+    national_id_file = models.FileField(upload_to='media/drivers/ids/', blank=True, null=True)
+    criminal_record_file = models.FileField(upload_to='media/drivers/criminal_records/', blank=True, null=True)
+    other_documents_file = models.FileField(upload_to='media/drivers/others/', blank=True, null=True)
 
     # Capabilities
     license_category = models.CharField(
@@ -88,7 +88,7 @@ class DriverProfile(models.Model):
 
 class CustomerProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='customer_profile')
-    profile_picture = models.ImageField(upload_to='customers/avatars/', blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='media/customers/avatars/', blank=True, null=True)
 
     def __str__(self):
         return f"Customer: {self.user.username}"
