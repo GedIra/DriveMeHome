@@ -9,7 +9,7 @@
 <style>
     .autocomplete-results {
         position: absolute;
-        top: 100%; left: 0; right: 0; z-index: 50;
+        top: 100%; left: 0; right: 0; z-index: 70;
         background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem;
         max-height: 200px; overflow-y: auto;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -205,10 +205,10 @@
 </div>
 
 <!-- DRIVER SELECTION MODAL BACKDROP -->
-<div id="driver-selection-modal-backdrop" class="fixed inset-0 z-40 hidden" data-modal-backdrop></div>
+<div id="driver-selection-modal-backdrop" class="absolute inset-0 h-full bg-gray-900/50 z-50 hidden" data-modal-backdrop></div>
 
 <!-- DRIVER SELECTION MODAL -->
-<div id="driver-selection-modal" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+<div id="driver-selection-modal" tabindex="-1" aria-hidden="true" class="absolute inset-0 z-60 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 max-h-full flex items-center justify-center">
     <div class="relative w-full max-w-2xl max-h-full">
         <div class="relative bg-white rounded-lg shadow h-[80vh] flex flex-col">
             <!-- Header -->
@@ -255,7 +255,7 @@
 </div>
 
 <!-- ADD VEHICLE MODAL -->
-<div id="add-vehicle-modal" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+<div id="add-vehicle-modal" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-[60] hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 max-h-full flex items-center justify-center">
     <div class="relative w-full max-w-md max-h-full">
         <div class="relative bg-white rounded-lg shadow">
             <button type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center" data-modal-hide="add-vehicle-modal">

@@ -3,7 +3,7 @@ from django.contrib.auth.views import LoginView
 from django.views.generic import CreateView, View
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.contrib.auth import login, get_user_model
+from django.contrib.auth import login, get_user_model, logout
 from .forms import CustomLoginForm, CustomUserCreationForm
 from django.http import JsonResponse
 from django.contrib.sites.shortcuts import get_current_site
@@ -36,6 +36,11 @@ def landing_view(request):
         elif request.user.is_customer:
             return redirect('rides:book_ride')
     return render(request, 'users/landingPage.html')
+
+# --- LOGOUT VIEW ---
+def logout_view(request):
+    logout(request)
+    return redirect('landing')
 
 # --- LOGIN VIEW ---
 class UserLoginView(LoginView):

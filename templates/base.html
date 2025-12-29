@@ -19,7 +19,7 @@
 <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 <body {% if user.is_authenticated %}class="logged-in"{% endif %}>
-    <div id="overlay" class="fixed inset-0 bg-black/10 backdrop-blur-xs z-20 hidden"></div>
+    <div id="overlay" class="fixed inset-0 bg-black/10 backdrop-blur-xs z-79 hidden"></div>
     <div class="flex h-screen bg-gray-100">
         {% if user.is_authenticated %}
             {% include 'includes/sidebar.html' %}
@@ -31,7 +31,7 @@
                 {% include 'includes/header_marketing.html' %}
             {% endif %}
 
-            <main id="main-content" class="flex-1 w-full overflow-x-hidden overflow-y-auto bg-gray-100">
+            <main id="main-content" class="relative flex-1 w-full overflow-x-hidden overflow-y-auto bg-gray-100">
                 {% block content_wrapper %}
                 <div class="container w-full mx-auto min-h-screen">
                     {% block content %}
