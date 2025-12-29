@@ -37,7 +37,7 @@ package-lock.json.lock
 .pnpm-store/
 
 # Tailwind generated output (optional)
-static/dist/output.css
+# static/dist/output.css
 # theme/.cache/
 # theme/dist/
 # theme/build/
