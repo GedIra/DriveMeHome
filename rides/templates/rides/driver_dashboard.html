@@ -13,9 +13,66 @@
 </style>
 {% endblock %}
 
+{% block page_title %}Dashboard Overview{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8 mt-20">
+<div class="container mx-auto px-4 py-8">
     
+    <!-- TOP STATS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <p class="text-sm text-gray-500">Active Rides</p>
+            <div class="flex items-center justify-between mt-2">
+                <div>
+                    <div class="text-3xl font-bold text-gray-900">{{ active_rides_count|default:0 }}</div>
+                    <p class="text-xs text-green-600 mt-1">+{{ active_rides_change|default:'0%' }} from yesterday</p>
+                </div>
+                <div class="bg-green-50 text-green-600 p-3 rounded-lg">
+                    {% lucide 'clock' size=20 class='opacity-90' %}
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <p class="text-sm text-gray-500">Total Revenue</p>
+            <div class="flex items-center justify-between mt-2">
+                <div>
+                    <div class="text-3xl font-bold text-gray-900">RWF {{ total_revenue|default:'0' }}</div>
+                    <p class="text-xs text-green-600 mt-1">+{{ revenue_change|default:'0%' }} from last week</p>
+                </div>
+                <div class="bg-yellow-50 text-yellow-600 p-3 rounded-lg">
+                    {% lucide 'credit-card' size=20 class='opacity-90' %}
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <p class="text-sm text-gray-500">Drivers Online</p>
+            <div class="flex items-center justify-between mt-2">
+                <div>
+                    <div class="text-3xl font-bold text-gray-900">{{ drivers_online|default:0 }}</div>
+                    <p class="text-xs text-blue-600 mt-1">{{ drivers_available_text|default:'available now' }}</p>
+                </div>
+                <div class="bg-blue-50 text-blue-600 p-3 rounded-lg">
+                    {% lucide 'car' size=20 class='opacity-90' %}
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <p class="text-sm text-gray-500">Pending Approvals</p>
+            <div class="flex items-center justify-between mt-2">
+                <div>
+                    <div class="text-3xl font-bold text-gray-900">{{ pending_approvals|default:0 }}</div>
+                    <p class="text-xs text-orange-500 mt-1">Requires attention</p>
+                </div>
+                <div class="bg-orange-50 text-orange-600 p-3 rounded-lg">
+                    {% lucide 'user-check' size=20 class='opacity-90' %}
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ... (Header & Status Toggle - existing code) ... -->
     <div class="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
         <div>
@@ -245,7 +302,7 @@
 <script>
     window.mapboxAccessToken = "{{ mapbox_access_token }}";
     window.csrfToken = "{{ csrf_token }}";
-    window.updateLocationUrl = "{% url 'api_update_location' %}";
+    window.updateLocationUrl = "{% url 'rides:api_update_location' %}";
     window.acceptRideBaseUrl = "/rides/api/driver/accept/"; 
     window.rideDetailsBaseUrl = "/rides/api/ride/details/";
     window.updateRideStatusBaseUrl = "/rides/api/ride/status/";

@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, reverse_lazy
 from django.contrib.auth.views import (
     LogoutView, 
     PasswordResetView, 
@@ -7,7 +7,7 @@ from django.contrib.auth.views import (
     PasswordResetCompleteView
 )
 from .views import (
-    UserLoginView,RegisterView,
+    UserLoginView,RegisterView, logout_view,
     ActivateAccountView,check_username_existence, 
     check_email_existence,check_phone_existence,
     landing_view,activation_sent_view, profile_view,
@@ -18,11 +18,12 @@ from .views import (
 )
 from .forms import CustomPasswordResetForm, CustomSetPasswordForm
 
+app_name = 'users'
+
 urlpatterns = [
     # Authentication
-    path('', landing_view, name='landing'),
     path('login/', UserLoginView.as_view(), name='login'),
-    path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
+    path('logout/', logout_view, name='logout'),
     path('register/', RegisterView.as_view(), name='register'),
     path('ajax/check-username/', check_username_existence, name='check_username_existence'),
     path('ajax/check-email/', check_email_existence, name='check_email_existence'),

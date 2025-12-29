@@ -1,0 +1,138 @@
+{% load static %}
+<header class="bg-white border-b border-gray-200 sticky top-0 z-[90] shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <div class="flex items-center gap-3">
+                <!-- Mobile hamburger -->
+                <button id="hamburger-button" class="text-gray-800 p-2 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-300 lg:hidden">
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 6H20M4 12H20M4 18H11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </button>
+
+                <!-- Page title / breadcrumb -->
+                <div class="flex flex-col sm:flex-row">
+                    <span class="text-sm text-gray-500 hidden sm:block">You are here</span>
+                    <h2 class="text-lg font-semibold text-gray-900 ml-0 sm:ml-2">{% block page_title %}{% endblock %}</h2>
+                </div>
+            </div>
+
+            <!-- Center area (search / view name on small screens) -->
+            <div class="flex-1 px-4">
+                <div class="max-w-lg mx-auto">
+                    <div class="hidden sm:block">
+                        <label for="global-search" class="sr-only">Search</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <input id="global-search" class="w-full border border-gray-300 rounded-lg py-2 pl-9 pr-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-colors" placeholder="Search...">
+                        </div>
+                    </div>
+                    <!-- mobile title is handled by the main title element above -->
+                </div>
+            </div>
+
+            <!-- Right actions -->
+            <div class="flex items-center gap-4">
+                <!-- Notifications -->
+                <div class="relative">
+                    <button class="flex items-center justify-center p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-colors duration-150">
+                        <ion-icon name="notifications-outline" class="size-6 fill-black"></ion-icon>
+                    </button>
+                    {% if notifications.count > 0 %}
+                    <span class="absolute -top-1 -right-2 inline-flex items-center justify-center size-6 text-xs font-bold leading-none text-white bg-red-600 rounded-full">{{ notifications.count }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- CTA / quick action (visible on md+) -->
+                <div class="hidden md:block">
+                    <a href="{% url 'rides:book_ride' %}" class="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-slate-900 px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-150">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        New Ride
+                    </a>
+                </div>
+
+                <!-- Profile Dropdown -->
+                <div class="relative">
+                    <button id="profile-button" aria-haspopup="true" aria-expanded="false" class="relative block h-10 w-10 rounded-full overflow-hidden shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-150">
+                        {% if user.is_customer and user.customer_profile.profile_picture %}
+                            <img id="profile-avatar" class="h-full w-full object-cover object-center" src="{{ user.customer_profile.profile_picture.url }}" alt="Your avatar" onerror="showUserInitial()">
+                        {% elif user.is_driver and user.driver_profile.profile_picture %}
+                            <img id="profile-avatar" class="h-full w-full object-cover object-center" src="{{ user.driver_profile.profile_picture.url }}" alt="Your avatar" onerror="showUserInitial()">
+                        {% else %}
+                            <div id="profile-initial" class="flex items-center justify-center w-full h-full bg-blue-500 text-white font-bold text-sm">
+                                {{ user.first_name|first|upper|default:user.username|first|upper }}
+                            </div>
+                        {% endif %}
+                    </button>
+
+                    <div id="profile-dropdown" role="menu" aria-hidden="true" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg overflow-hidden shadow-xl z-10 border border-gray-100">
+                        <a href="{% url 'users:profile' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-100">Profile</a>
+                        {% if user.is_driver %}
+                        <a href="{% url 'users:driver_settings' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-100">Driver Settings</a>
+                        {% elif user.is_customer %}
+                        <a href="{% url 'users:customer_settings' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-100">Customer Settings</a>
+                        {% endif %}
+                        <a href="{% url 'users:logout' %}" class="block px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<script>
+    function showUserInitial() {
+        const avatar = document.getElementById('profile-avatar');
+        const initial = document.getElementById('profile-initial');
+        if (avatar && initial) {
+            avatar.style.display = 'none';
+            initial.classList.remove('hidden');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const avatar = document.getElementById('profile-avatar');
+        if (avatar) {
+            avatar.addEventListener('error', showUserInitial);
+        }
+
+        // Profile dropdown handling
+        const profileBtn = document.getElementById('profile-button');
+        const profileDropdown = document.getElementById('profile-dropdown');
+
+        function openDropdown(open) {
+            if (!profileBtn || !profileDropdown) return;
+            if (open) {
+                profileDropdown.classList.remove('hidden');
+                profileBtn.setAttribute('aria-expanded', 'true');
+                profileDropdown.setAttribute('aria-hidden', 'false');
+            } else {
+                profileDropdown.classList.add('hidden');
+                profileBtn.setAttribute('aria-expanded', 'false');
+                profileDropdown.setAttribute('aria-hidden', 'true');
+            }
+        }
+
+        if (profileBtn) {
+            profileBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const isOpen = !profileDropdown.classList.contains('hidden');
+                openDropdown(!isOpen);
+            });
+        }
+
+        document.addEventListener('click', function (e) {
+            if (!profileDropdown || !profileBtn) return;
+            const inside = profileDropdown.contains(e.target) || profileBtn.contains(e.target);
+            if (!inside) openDropdown(false);
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                openDropdown(false);
+            }
+        });
+    });
+</script>

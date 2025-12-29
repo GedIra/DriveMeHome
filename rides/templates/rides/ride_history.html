@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8 mt-20 max-w-4xl">
+<div class="container mx-auto px-4 py-8 max-w-4xl">
     
     <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <h1 class="text-2xl font-bold text-gray-800">
@@ -191,17 +191,50 @@
                                     </div>
                                 {% endif %}
                             </div>
+                                                        <!-- Review Action -->
+                                                        {% if ride.status == 'COMPLETED' %}
+                                                            <div class="mt-4">
+                                                                <button type="button" data-modal-target="review-modal-{{ ride.id }}" data-modal-toggle="review-modal-{{ ride.id }}" class="px-4 py-2 bg-yellow-400 text-gray-900 rounded-md font-medium">Leave a Review</button>
+                                                            </div>
+                                                        {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+                <!-- REVIEW MODAL -->
+                <div id="review-modal-{{ ride.id }}" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                    <div class="relative w-full max-w-md max-h-full">
+                        <div class="relative bg-white rounded-lg shadow p-6">
+                            <button type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center" data-modal-hide="review-modal-{{ ride.id }}">×</button>
+                            <h3 class="text-lg font-medium mb-2">Leave a review for Ride #{{ ride.id }}</h3>
+                            <form class="space-y-3" id="review-form-{{ ride.id }}">
+                                <label class="block text-sm text-gray-600">Rating</label>
+                                <select name="rating" required class="w-full border rounded p-2" id="review-rating-{{ ride.id }}">
+                                    <option value="">Select</option>
+                                    <option value="5">5 - Excellent</option>
+                                    <option value="4">4 - Very Good</option>
+                                    <option value="3">3 - Good</option>
+                                    <option value="2">2 - Fair</option>
+                                    <option value="1">1 - Poor</option>
+                                </select>
+                                <label class="block text-sm text-gray-600">Comment (optional)</label>
+                                <textarea name="comment" id="review-comment-{{ ride.id }}" rows="4" class="w-full border rounded p-2" placeholder="Share your experience..."></textarea>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" data-modal-hide="review-modal-{{ ride.id }}" class="px-3 py-2 bg-gray-100 rounded">Cancel</button>
+                                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded" data-ride-id="{{ ride.id }}">Submit Review</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
         {% empty %}
             <div class="text-center py-12 bg-gray-50 rounded-lg">
                 <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                 <p class="text-gray-500">No rides found.</p>
                 {% if user.is_customer %}
-                    <a href="{% url 'book_ride' %}" class="text-blue-600 font-medium hover:underline mt-2 inline-block">Book a ride now</a>
+                    <a href="{% url 'rides:book_ride' %}" class="text-blue-600 font-medium hover:underline mt-2 inline-block">Book a ride now</a>
                 {% endif %}
             </div>
         {% endfor %}
@@ -230,4 +263,53 @@
     </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                        }
+                }
+        }
+        return cookieValue;
+}
+
+document.addEventListener('submit', function(e){
+    const form = e.target;
+    if (!form.id || !form.id.startsWith('review-form-')) return;
+    e.preventDefault();
+    const rideId = form.id.replace('review-form-','');
+    const rating = document.getElementById('review-rating-'+rideId).value;
+    const comment = document.getElementById('review-comment-'+rideId).value;
+    if (!rating) { alert('Please select a rating.'); return; }
+
+    fetch('{% url "rides:api_create_review" 0 %}'.replace('/0/','/'+rideId+'/'), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({rating: rating, comment: comment})
+    }).then(r=>r.json()).then(data=>{
+        if (data.success) {
+            alert('Thank you — your review was submitted.');
+            // hide modal
+            const hideEvent = new Event('click');
+            const btn = document.querySelector('[data-modal-hide="review-modal-'+rideId+'"]');
+            if (btn) btn.dispatchEvent(hideEvent);
+            location.reload();
+        } else {
+            alert(data.error || 'Could not submit review.');
+        }
+    }).catch(err=>{ alert('Network error'); console.error(err); });
+});
+</script>
 {% endblock %}

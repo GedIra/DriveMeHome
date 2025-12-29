@@ -1,97 +1,143 @@
+<!-- Sidebar -->
 {% load static %}
+<aside id="sidebar" role="navigation" aria-label="Main sidebar" class="fixed top-16 bottom-0 lg:inset-y-0 left-0 z-80 w-64 bg-primary text-white shadow-lg transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+    <div class="flex items-center justify-between gap-3 px-4 py-4 border-b border-white/10">
+        <div class="flex items-center gap-3">
+            <img src="{% static 'images/svg/white_logo.png' %}" alt="DriveMe Home logo" class="h-10 w-10 rounded-md">
+            <div>
+            <div class="font-bold text-lg">DriveMe Home</div>
+            <div class="text-sm text-white/70">
+                {% if user.is_authenticated %}
+                    {% if user.is_driver %}
+                        Driver Panel
+                    {% elif user.is_customer %}
+                        Customer Panel
+                    {% else %}
+                        Admin Panel
+                    {% endif %}
+                {% else %}
+                    Welcome Guest
+                {% endif %}
+            </div>
+            </div>
+        </div>
+        <!-- Mobile close button -->
+        <button id="close-sidebar-button" aria-label="Close sidebar" class="text-white lg:hidden p-2 rounded-md hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+    </div>
 
-<!-- SIDEBAR CONTAINER -->
-<!-- Hidden by default on mobile (controlled by JS), Fixed on Desktop -->
-<aside id="app-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 md:translate-x-0 dark:bg-gray-800 dark:border-gray-700" aria-label="Sidebar">
-   <div class="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
-      
-      <!-- MAIN NAVIGATION (Everyone) -->
-      <ul class="space-y-2 font-medium">
-         <li>
-            <a href="{% if user.is_driver %}{% url 'driver_dashboard' %}{% else %}{% url 'book_ride' %}{% endif %}" 
-               class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-               <svg class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 21">
-                  <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z"/>
-                  <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z"/>
-               </svg>
-               <span class="ms-3">Dashboard</span>
+    <nav class="flex-1 overflow-y-auto py-6 px-2 space-y-1">
+        {% if user.is_authenticated %}
+            <span class="text-white/60 text-xs font-semibold uppercase px-4">Menu</span>
+            {% if user.is_driver %}
+                <!-- Driver Links -->
+                <a href="{% url 'rides:driver_dashboard' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/90 hover:bg-white/5">
+                    {% lucide 'layout-dashboard' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'rides:ride_history' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                    {% lucide 'history' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>Trip History</span>
+                </a>
+                <a href="{% url 'users:profile' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                    {% lucide 'user' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>Profile</span>
+                </a>
+                <a href="{% url 'rides:reviews_list' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                    {% lucide 'star' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>My Reviews</span>
+                </a>
+                <a href="{% url 'users:driver_settings' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                    {% lucide 'settings' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>Settings</span>
+                </a>
+                <div class="px-4 py-2 flex items-center gap-2">
+                    {% lucide 'credit-card' size=16 class='text-white/60' stroke_width='2' %}
+                    <div>
+                        <span class="text-white/40 text-xs font-semibold uppercase">Transactions</span>
+                        <div class="text-white/50 text-xs mt-1">Coming soon</div>
+                    </div>
+                </div>
+                <a href="{% url 'users:logout' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                    {% lucide 'log-out' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>Logout</span>
+                </a>
+            {% elif user.is_customer %}
+                <!-- Customer Links -->
+                <a href="{% url 'rides:book_ride' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                    {% lucide 'car' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>Book a Ride</span>
+                </a>
+                <a href="{% url 'rides:ride_history' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                    {% lucide 'history' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>Ride History</span>
+                </a>
+                <a href="{% url 'users:profile' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                    {% lucide 'user' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>Profile</span>
+                </a>
+                <a href="{% url 'users:customer_settings' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                    {% lucide 'settings' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>Settings</span>
+                </a>
+                <div class="px-4 py-2 flex items-center gap-2">
+                    {% lucide 'credit-card' size=16 class='text-white/60' stroke_width='2' %}
+                    <div>
+                        <span class="text-white/40 text-xs font-semibold uppercase">Transactions</span>
+                        <div class="text-white/50 text-xs mt-1">Coming soon</div>
+                    </div>
+                </div>
+                <a href="{% url 'users:client_preferences' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                    {% lucide 'sliders-horizontal' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>Preferences</span>
+                </a>
+                <a href="{% url 'users:logout' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                    {% lucide 'log-out' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>Logout</span>
+                </a>
+            {% else %}
+                 <!-- Generic authenticated user -->
+                 <a href="{% url 'users:profile' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                    {% lucide 'user' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>Profile</span>
+                </a>
+                <a href="{% url 'users:logout' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                    {% lucide 'log-out' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                    <span>Logout</span>
+                </a>
+            {% endif %}
+        {% else %}
+            <!-- Public Links -->
+            <span class="text-white/60 text-xs font-semibold uppercase px-4">Main</span>
+            <a href="{% url 'users:login' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                {% lucide 'log-in' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                <span>Login</span>
             </a>
-         </li>
-         
-         <li>
-            <a href="{% url 'profile' %}" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-               <svg class="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 18">
-                  <path d="M14 2a3.963 3.963 0 0 0-1.4.267 6.439 6.439 0 0 1-1.331 6.638A4 4 0 1 0 14 2Zm1 9h-1.264A6.957 6.957 0 0 1 15 15v2a2.97 2.97 0 0 1-.184 1H19a1 1 0 0 0 1-1v-1a5.006 5.006 0 0 0-5-5ZM6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Z"/>
-               </svg>
-               <span class="flex-1 ms-3 whitespace-nowrap">Profile</span>
+            <a href="{% url 'users:register' %}" class="group flex items-center gap-3 py-3 px-4 rounded-lg mx-3 text-sm font-medium text-white/80 hover:bg-white/5">
+                {% lucide 'user-plus' size=20 class='text-white/80 group-hover:text-white' stroke_width='2' %}
+                <span>Register</span>
             </a>
-         </li>
-         
-         <li>
-            <a href="#" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-               <svg class="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-               </svg>
-               <span class="flex-1 ms-3 whitespace-nowrap">Ride History</span>
-            </a>
-         </li>
-      </ul>
+        {% endif %}
+    </nav>
 
-      <!-- CUSTOMER SPECIFIC -->
-      {% if user.is_customer %}
-      <ul class="pt-4 mt-4 space-y-2 font-medium border-t border-gray-200 dark:border-gray-700">
-         <div class="px-2 text-xs font-semibold text-gray-500 uppercase">Customer</div>
-         <li>
-            <a href="#" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-               <svg class="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-               <span class="ms-3">My Vehicles</span>
+    <div class="px-4 py-4 border-t border-white/10 mt-auto">
+        {% if user.is_authenticated %}
+            <a href="{% url 'users:profile' %}" class="flex items-center gap-3 px-2 hover:opacity-95">
+                {% if user.is_customer and user.customer_profile.profile_picture %}
+                    <img src="{{ user.customer_profile.profile_picture.url }}" alt="{{ user.get_full_name|default:user.username }}'s avatar" class="w-10 h-10 rounded-full object-cover" loading="lazy">
+                {% elif user.is_driver and user.driver_profile.profile_picture %}
+                    <img src="{{ user.driver_profile.profile_picture.url }}" alt="{{ user.get_full_name|default:user.username }}'s avatar" class="w-10 h-10 rounded-full object-cover" loading="lazy">
+                {% else %}
+                    <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white font-semibold">{{ user.first_name|first|upper|default:user.username|first|upper }}</div>
+                {% endif %}
+                <div>
+                    <div class="text-sm font-semibold">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="text-xs text-white/70">{{ user.email }}</div>
+                </div>
             </a>
-         </li>
-         <li>
-            <a href="#" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-               <svg class="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
-               <span class="ms-3">Saved Places</span>
-            </a>
-         </li>
-      </ul>
-      {% endif %}
-
-      <!-- DRIVER SPECIFIC -->
-      {% if user.is_driver %}
-      <ul class="pt-4 mt-4 space-y-2 font-medium border-t border-gray-200 dark:border-gray-700">
-         <div class="px-2 text-xs font-semibold text-gray-500 uppercase">Driver</div>
-         <li>
-            <a href="#" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-               <svg class="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-               <span class="ms-3">Earnings</span>
-            </a>
-         </li>
-         <li>
-            <a href="{% url 'driver_application' %}" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-               <svg class="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-               <span class="ms-3">Documents</span>
-            </a>
-         </li>
-      </ul>
-      {% endif %}
-
-      <!-- SYSTEM LINKS -->
-      <ul class="pt-4 mt-4 space-y-2 font-medium border-t border-gray-200 dark:border-gray-700">
-         <li>
-            <a href="#" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-               <svg class="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-               <span class="ms-3">Support</span>
-            </a>
-         </li>
-         <li>
-            <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit" class="flex w-full items-center p-2 text-red-600 rounded-lg hover:bg-red-50 group">
-                   <svg class="shrink-0 w-5 h-5 text-red-500 transition duration-75 group-hover:text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                   <span class="ms-3 whitespace-nowrap">Log Out</span>
-                </button>
-            </form>
-         </li>
-      </ul>
-   </div>
+        {% else %}
+            <div class="text-sm text-white/70 px-2">Welcome to DriveMe Home</div>
+        {% endif %}
+    </div>
 </aside>

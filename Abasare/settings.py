@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'users',
     'lucide',
     'rides',
-    'notifications'
+    'notifications',
+    'info'
 ]
 
 MIDDLEWARE = [
@@ -146,9 +147,12 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 LOGIN_REDIRECT_URL = '/' 
-LOGIN_URL = 'login'
+LOGIN_URL = 'users:login'
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # --- EMAIL CONFIGURATION (Development) ---
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

@@ -11,6 +11,15 @@
   <link rel="stylesheet" href="{% static 'dist/output.css' %}">
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 font-sans">
+  {% block back_link %}
+    <div class="fixed top-4 left-4">
+      <a href="{% url 'landing' %}" class="text-blue-600 hover:text-blue-800 text-2xl flex items-center gap-1">
+        <ion-icon name="arrow-back-circle-outline"></ion-icon>
+        <span class="text-sm">Back to Home</span>
+      </a>
+    </div>
+  {% endblock %}
+
 
   <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
     <!-- Header Section -->
@@ -43,10 +52,21 @@
 
     <!-- Footer/Extra Links Section -->
     {% block footer %}
+    <div class="px-8 pb-6 pt-2">
+      <div class="flex flex-wrap justify-center gap-3 text-sm text-gray-600">
+        <a href="/" class="hover:text-blue-700">Home</a>
+        <a href="/users/login/" class="hover:text-blue-700">Login</a>
+        <a href="/users/register/" class="hover:text-blue-700">Register</a>
+        <a href="/rides/driver/dashboard/" class="hover:text-blue-700">Driver Dashboard</a>
+        <a href="/rides/book/" class="hover:text-blue-700">Book Ride</a>
+      </div>
+    </div>
     {% endblock %}
   </div>
   {% block scripts %}
     <script src="{% static 'js/authentication.js' %}"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
   {% endblock %}
 </body>
 </html>

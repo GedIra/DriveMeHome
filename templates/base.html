@@ -9,6 +9,7 @@
     
     <!-- CSS files -->
     <link rel="stylesheet" href="{% static 'dist/output.css' %}">
+
     
     {% block extra_head %}
     <!-- Additional head content -->
@@ -17,119 +18,95 @@
 <!-- Icons -->
 <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-<body>
-    <header>
-        <nav class="fixed z-10 top-0 right-0 left-0 bg-white shadow-lg rounded-b-lg">
-            {% block nav %}
-                <div class="hidden lg:flex w-full justify-center items-center h-20 p-4">
-                    <ul class="flex w-full justify-between items-center">
-                        <a href="#" class="flex space-x-4 items-center">
-                            <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-1 px-3">
-                                <img src="{% static 'images/svg/dark_logo.png' %}" alt="Site Logo" class="w-9 h-8">
-                            </div>
-                            <span class="font-bold text-3xl text-primary">DriveMe Home</span>
-                        </a>
+<body {% if user.is_authenticated %}class="logged-in"{% endif %}>
+    <div id="overlay" class="fixed inset-0 bg-black/10 backdrop-blur-xs z-79 hidden"></div>
+    <div class="flex h-screen bg-gray-100">
+        {% if user.is_authenticated %}
+            {% include 'includes/sidebar.html' %}
+        {% endif %}
+        <div class="flex-1 flex flex-col overflow-hidden {% if user.is_authenticated %}lg:ml-64{% endif %}">
+            {% if user.is_authenticated %}
+                {% include 'includes/logged_in_header.html' %}
+            {% else %}
+                {% include 'includes/header_marketing.html' %}
+            {% endif %}
 
-                        <li class="space-x-6 text-lg font-normal text-neutral-600">
-                            <a href="#">How It Works</a>
-                            <a href="#">Safety</a>
-                            <a href="#">Pricing</a>
-                            <a href="#">Support</a>
-                            <a href="#" class="font-medium text-primary">Sign up</a>
-                            <a href="#" class="font-medium text-primary">Log In</a>
-                        </li>
-                    </ul>
+            <main id="main-content" class="relative flex-1 w-full overflow-x-hidden overflow-y-auto bg-gray-100">
+                {% block content_wrapper %}
+                <div class="container w-full mx-auto min-h-screen">
+                    {% block content %}
+                    <!-- Main content goes here -->
+                    {% endblock %}
                 </div>
-                
-                <div class="static flex w-full justify-center items-center h-20 px-4 lg:hidden">
-                    <ul class="flex w-full items-center justify-between">
-                        <a href="#" class="flex space-x-4 items-center">
-                            <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-2 px-3">
-                                <img src="{% static 'images/svg/dark_logo.png' %}" alt="Site Logo" class="w-8 h-7">
-                            </div>
-                            <span class="font-bold text-2xl text-primary">DriveMe Home</span>
-                        </a>
-                        <img src="{% static 'images/svg/menu.svg' %}" alt="menu button" class="w-10">
-                    </ul>
-                </div>  
-            {% endblock %}
-        </nav>
-    </header>
-
-    <main>
-        {% block content %}
-        <!-- Main content goes here -->
-        {% endblock %} 
-    </main>
-
-    <footer>
-        {% block footer %}
-
-            <div class="p-[5%] max-p-16 bg-slate-900 text-gray-300/80 grid space-y-6">
-                <div class="grid gap-y-4 lg:grid-cols-3 text-lg font-normal">
-                    <div class="grid order-last lg:order-first w-full sm:max-w-[70%]">
-                        <div class="flex gap-2 items-center">
-                            <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-1 px-2 sm:px-3">
-                                <img src="{% static 'images/svg/dark_logo.png' %}" alt="Site Logo" class="size-6 sm:size-7 lg:size-8">
-                            </div>
-                            <p class="font-bold text-white text-xl sm:text-2xl lg:text-3xl">DriveMe Home</p>
-                        </div>
-                        <p class="text-lg font-normal">Safe, reliable designated driver service across Rwanda. Your safety is our mission.</p>
-                        <div class="flex space-x-4 icon-wrapper">
-                            <a href="#">{% lucide "facebook" size="24" stroke_width=2 class="my-icon" %}</a>
-                            <a href="#">{% lucide "twitter" size="24" stroke_width=2 class="my-icon" %}</a>
-                            <a href="#">{% lucide "instagram" size="24" stroke_width=1 fill="transparent" class="text-gret  hover:text-secondary" %}</a>
-                            <a href="#">{% lucide "linkedin" size="24" stroke_width=1  class="my-icon" %}</a>
-                        </div>
-                    </div>
-
-                    <div class="grid gap-y-4 sm:grid-cols-3 lg:col-span-2 lg:grid-cols-3">
-                        <div class="grid space-y-1.5">
-                            <p class="font-semibold text-white text-lg">Company</p>
-                            <a href="#">About Us</a>
-                            <a href="#">How It Works</a>
-                            <a href="#">Safety</a>
-                            <a href="#">Careers</a>
-                            <a href="#">Press</a>
-                        </div>
-
-                        <div class="grid space-y-1.5">
-                            <p class="font-semibold text-white text-lg">Support</p>
-                            <a href="#">Help Center</a>
-                            <a href="#">Contact Us</a>
-                            <a href="#">Report Issue</a>
-                            <a href="#">Emergency</a>
-                            <a href="#">Lost Items</a>
-                        </div>
-
-                        <div class="grid content-start space-y-1.5">
-                            <p class="font-semibold text-white text-lg">Legal</p>
-                            <a href="#">Privacy Policy</a>
-                            <a href="#">Terms of Service</a>
-                            <a href="#">Driver Agreement</a>
-                            <a href="#">Admin Login</a>
-                        </div>
-
-                    </div>
-                </div>
-                <div class="w-full pt-8 border-t border-gray-400/20">
-                    <div class="flex flex-col-reverse space-y-2 lg:flex lg:flex-row w-full justify-between">
-                        <span>© 2024 DriveMe Home. All rights reserved.</span>
-                        <p class="grid lg:flex space-x-4">
-                            <span>Available in:</span>
-                            <span>Kigali • Butare • Musanze</span>
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-        {% endblock %}
-    </footer>
+                {% endblock content_wrapper %}
+                {% include 'includes/footer.html' %}
+            </main>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
     
     <!-- JavaScript files -->
     {% block scripts %}
-    <!-- <script src="{% static 'js/main.js' %}"></script> -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find nearest scrollable ancestor (or window)
+            function getScrollContainer(el) {
+                let parent = el.parentElement;
+                while (parent && parent !== document.body) {
+                    const style = window.getComputedStyle(parent);
+                    const overflowY = style.overflowY;
+                    if (overflowY === 'auto' || overflowY === 'scroll' || parent.scrollHeight > parent.clientHeight) {
+                        return parent;
+                    }
+                    parent = parent.parentElement;
+                }
+                return window;
+            }
+
+            // Function to handle smooth scrolling to a target element within the correct container
+            function smoothScrollTo(targetId) {
+                const targetElement = document.getElementById(targetId);
+                if (!targetElement) return;
+
+                const container = getScrollContainer(targetElement);
+
+                if (container === window) {
+                    const top = targetElement.getBoundingClientRect().top + window.pageYOffset;
+                    window.scrollTo({ top, behavior: 'smooth' });
+                } else {
+                    const containerRect = container.getBoundingClientRect();
+                    const targetRect = targetElement.getBoundingClientRect();
+                    const top = targetRect.top - containerRect.top + container.scrollTop;
+                    container.scrollTo({ top, behavior: 'smooth' });
+                }
+            }
+
+            // Handle clicks on navigation links
+            document.querySelectorAll('a[href*="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    const targetId = href.substring(href.lastIndexOf('#') + 1);
+                    const targetElement = document.getElementById(targetId);
+
+                    if (targetElement) {
+                        e.preventDefault();
+                        smoothScrollTo(targetId);
+                    }
+                });
+            });
+
+            // Handle direct anchor navigation on page load
+            if (window.location.hash) {
+                const targetId = window.location.hash.substring(1);
+                // Use a small timeout to ensure the page has loaded
+                setTimeout(() => {
+                    smoothScrollTo(targetId);
+                }, 100);
+            }
+        });
+    </script>
+    <script src="{% static 'js/header_scroll.js' %}"></script>
+    <script src="{% static 'js/sidebar.js' %}"></script>
     {% endblock %}
 </body>
 </html>
