@@ -1,42 +1,34 @@
 {% load static %}
 <header class="bg-white shadow scroll-header">
     <div class="mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="hidden lg:flex w-full justify-center items-center p-4">
-            <ul class="flex w-full justify-between items-center">
-                <a href="{% url 'landing' %}" class="flex space-x-4 items-center">
-                    <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-1 px-3">
-                        <img src="{% static 'images/svg/dark_logo.png' %}" alt="Site Logo" class="w-9 h-8">
-                    </div>
-                    <span class="font-bold text-3xl text-primary">DriveMe Home</span>
-                </a>
+        <div class="flex w-full justify-between items-center p-4 lg:h-20">
+            <a href="{% url 'landing' %}" class="flex space-x-4 items-center">
+                <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-1 lg:py-2 px-3">
+                    <img src="{% static 'images/svg/dark_logo.png' %}" alt="DriveMe Home Logo" class="w-8 h-7 lg:w-9 lg:h-8">
+                </div>
+                <span class="font-bold text-2xl lg:text-3xl text-primary">DriveMe Home</span>
+            </a>
 
-                <li class="flex gap-x-8 text-lg font-normal text-neutral-600">
-                    {% if request.resolver_match and request.resolver_match.url_name == 'landing' %}
-                        <a href="#how-it-works" class="nav-link">How It Works</a>
-                        <a href="#safety" class="nav-link">Safety</a>
-                        <a href="#pricing" class="nav-link">Pricing</a>
-                    {% else %}
-                        <a href="{% url 'landing' %}#how-it-works" class="nav-link">How It Works</a>
-                        <a href="{% url 'landing' %}#safety" class="nav-link">Safety</a>
-                        <a href="{% url 'landing' %}#pricing" class="nav-link">Pricing</a>
-                    {% endif %}
-                    <a href="{% url 'info:support' %}">Support</a>
-                    <a href="{% url 'users:register' %}" class="font-medium text-primary">Sign up</a>
-                    <a href="{% url 'users:login' %}" class="font-medium text-primary">Log In</a>
-                </li>
-            </ul>
-        </div>
-        
-        <div class="static flex w-full justify-center items-center h-20 px-4 lg:hidden">
-            <ul class="flex w-full items-center justify-between">
-                <a href="{% url 'landing' %}" class="flex space-x-4 items-center">
-                    <div class="rounded-sm flex justify-center items-center bg-secondary overflow-hidden py-2 px-3">
-                        <img src="{% static 'images/svg/dark_logo.png' %}" alt="Site Logo" class="w-8 h-7">
-                    </div>
-                    <span class="font-bold text-2xl text-primary">DriveMe Home</span>
-                </a>
-                <img src="{% static 'images/svg/menu.svg' %}" alt="menu button" class="w-10">
-            </ul>
+            <!-- Desktop Nav -->
+            <nav class="hidden lg:flex items-center gap-x-8 text-lg font-normal text-neutral-600">
+                {% if request.resolver_match and request.resolver_match.url_name == 'landing' %}
+                    <a href="#how-it-works" class="nav-link">How It Works</a>
+                    <a href="#safety" class="nav-link">Safety</a>
+                    <a href="#pricing" class="nav-link">Pricing</a>
+                {% else %}
+                    <a href="{% url 'landing' %}#how-it-works" class="nav-link">How It Works</a>
+                    <a href="{% url 'landing' %}#safety" class="nav-link">Safety</a>
+                    <a href="{% url 'landing' %}#pricing" class="nav-link">Pricing</a>
+                {% endif %}
+                <a href="{% url 'info:support' %}">Support</a>
+                <a href="{% url 'users:register' %}" class="font-medium text-primary">Sign up</a>
+                <a href="{% url 'users:login' %}" class="font-medium text-primary">Log In</a>
+            </nav>
+
+            <!-- Mobile Menu Button -->
+            <button class="lg:hidden">
+                <img src="{% static 'images/svg/menu.svg' %}" alt="Open menu" class="w-10">
+            </button>
         </div>
     </div>
 </header>
