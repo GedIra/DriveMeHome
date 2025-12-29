@@ -249,10 +249,6 @@ def driver_application_view(request):
     }
     return render(request, 'users/driver_application.html', context)
 
-# ... (Existing simple views like activation_sent_view if present) ...
-def activation_sent_view(request):
-    return render(request, 'users/activation_sent.html')
-
 @login_required
 def customer_profile_settings_view(request):
     user = request.user
