@@ -1,9 +1,10 @@
 <!-- Sidebar -->
 {% load static %}
-<aside class="fixed inset-y-0 left-0 z-30 w-72 bg-primary text-white shadow-lg hidden lg:flex flex-col">
-    <div class="flex items-center gap-3 px-6 py-6 border-b border-white/10">
-        <img src="{% static 'images/svg/white_logo.png' %}" alt="logo" class="h-10 w-10 rounded-md">
-        <div>
+<aside id="sidebar" role="navigation" aria-label="Main sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-primary text-white shadow-lg transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+    <div class="flex items-center justify-between gap-3 px-4 py-4 border-b border-white/10">
+        <div class="flex items-center gap-3">
+            <img src="{% static 'images/svg/white_logo.png' %}" alt="DriveMe Home logo" class="h-10 w-10 rounded-md">
+            <div>
             <div class="font-bold text-lg">DriveMe Home</div>
             <div class="text-sm text-white/70">
                 {% if user.is_authenticated %}
@@ -18,7 +19,12 @@
                     Welcome Guest
                 {% endif %}
             </div>
+            </div>
         </div>
+        <!-- Mobile close button -->
+        <button id="close-sidebar-button" aria-label="Close sidebar" class="text-white lg:hidden p-2 rounded-md hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
     </div>
 
     <nav class="flex-1 overflow-y-auto py-6 px-2 space-y-1">
@@ -117,13 +123,19 @@
 
     <div class="px-4 py-4 border-t border-white/10">
         {% if user.is_authenticated %}
-            <div class="flex items-center gap-3 px-2">
-                <img src="{% static 'images/public/user-avatar.png' %}" alt="user" class="w-10 h-10 rounded-full object-cover">
+            <a href="{% url 'users:profile' %}" class="flex items-center gap-3 px-2 hover:opacity-95">
+                {% if user.is_customer and user.customer_profile.profile_picture %}
+                    <img src="{{ user.customer_profile.profile_picture.url }}" alt="{{ user.get_full_name|default:user.username }}'s avatar" class="w-10 h-10 rounded-full object-cover" loading="lazy">
+                {% elif user.is_driver and user.driver_profile.profile_picture %}
+                    <img src="{{ user.driver_profile.profile_picture.url }}" alt="{{ user.get_full_name|default:user.username }}'s avatar" class="w-10 h-10 rounded-full object-cover" loading="lazy">
+                {% else %}
+                    <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white font-semibold">{{ user.first_name|first|upper|default:user.username|first|upper }}</div>
+                {% endif %}
                 <div>
                     <div class="text-sm font-semibold">{{ user.get_full_name|default:user.username }}</div>
                     <div class="text-xs text-white/70">{{ user.email }}</div>
                 </div>
-            </div>
+            </a>
         {% else %}
             <div class="text-sm text-white/70 px-2">Welcome to DriveMe Home</div>
         {% endif %}
